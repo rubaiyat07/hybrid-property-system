@@ -8,6 +8,7 @@ use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\LeaseController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,6 +40,12 @@ Route::get('/dashboard', function () {
         return redirect()->route('landlord.dashboard');
     } elseif ($user->hasRole('Tenant')) {
         return redirect()->route('tenant.dashboard');
+    } elseif ($user->hasRole('Agent')) {
+        return redirect()->route('agent.dashboard');
+    } elseif ($user->hasRole('Buyer')) {
+        return redirect()->route('buyer.dashboard');
+    } elseif ($user->hasRole('Maintenance')) {
+        return redirect()->route('maintenance.dashboard');
     }
     abort(403); // Unknown role
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -52,24 +59,118 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Admin Routes
-    Route::prefix('admin')->middleware(['role:Admin'])->group(function () {
-        Route::get('/dashboard', [AdminController::class,'adminDashboard'])->name('admin.dashboard');
+    Route::prefix('admin')->name('admin.')->middleware(['role:Admin'])->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [AdminController::class, 'adminDashboard'])->name('dashboard');
+        
+        // User Management
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::post('/users/{user}/ban', [UserController::class, 'ban'])->name('users.ban');
+        Route::post('/users/{user}/unban', [UserController::class, 'unban'])->name('users.unban');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::post('/users/bulk-action', [UserController::class, 'bulkAction'])->name('users.bulk-action');
+        
+        // Property Management
         Route::resource('properties', PropertyController::class);
+        
+        // Tenant Management
         Route::resource('tenants', TenantController::class);
+        
+        // Unit Management
+        Route::resource('units', UnitController::class);
+        
+        // Lease Management
+        Route::resource('leases', LeaseController::class);
+        
+        // Payment Management
+        Route::resource('payments', PaymentController::class);
+        
+        // Reports
+        Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+        Route::get('/reports/income', [AdminController::class, 'incomeReport'])->name('reports.income');
+        Route::get('/reports/occupancy', [AdminController::class, 'occupancyReport'])->name('reports.occupancy');
+        
+        // Settings
+        Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+        Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
     });
+
 
     // Landlord Routes
-    Route::prefix('landlord')->middleware(['role:Landlord'])->group(function () {
-        // Route::get('/dashboard', [UserController::class,'landlordDashboard'])->name('landlord.dashboard');
-        // Route::resource('properties', PropertyController::class);
-        // Route::resource('units', UnitController::class);
+    Route::prefix('landlord')->name('landlord.')->middleware(['role:Landlord'])->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\LandlordController::class, 'landlordDashboard'])->name('dashboard');
+    // Properties (Landlord can manage own properties)
+    Route::resource('properties', PropertyController::class)->except(['destroy']); 
+    // Units (under landlord’s properties)
+    Route::resource('units', UnitController::class)->except(['destroy']); 
+    // Tenants (view tenants assigned to landlord’s properties)
+    Route::resource('tenants', TenantController::class)->only(['index', 'show']);
+    // Leases (landlord creates leases for tenants)
+    Route::resource('leases', LeaseController::class)->only(['index', 'show', 'create', 'store']);
+    // Payments (landlord can view payments received)
+    Route::resource('payments', PaymentController::class)->only(['index', 'show']);
     });
 
+
+    // Agent Routes
+    Route::prefix('agent')->name('agent.')->middleware(['role:Agent'])->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\AgentController::class, 'agentDashboard'])->name('dashboard');
+    // Assigned Properties (Agent can see landlord’s assigned properties)
+    Route::get('/properties', [PropertyController::class, 'agentIndex'])->name('properties.index');
+    Route::get('/properties/{property}', [PropertyController::class, 'agentShow'])->name('properties.show');
+    // Leads (agent manages potential buyers/tenants)
+    Route::resource('leads', \App\Http\Controllers\LeadController::class)->except(['destroy']);
+    // Transactions (sales/rental transactions handled by agent)
+    Route::resource('transactions', \App\Http\Controllers\TransactionController::class)->only(['index', 'show', 'create', 'store']);
+    });
+
+
     // Tenant Routes
-    Route::prefix('tenant')->middleware(['role:Tenant'])->group(function () {
-        // Route::get('/dashboard', [UserController::class,'tenantDashboard'])->name('tenant.dashboard');
-        // Route::resource('leases', LeaseController::class);
-        // Route::resource('payments', PaymentController::class);
+    Route::prefix('tenant')->name('tenant.')->middleware(['role:Tenant'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'tenantDashboard'])->name('dashboard');
+        Route::get('/leases', [LeaseController::class, 'tenantLeases'])->name('leases.index');
+        Route::get('/leases/{lease}', [LeaseController::class, 'tenantShow'])->name('leases.show');
+        Route::get('/payments', [PaymentController::class, 'tenantPayments'])->name('payments.index');
+        Route::get('/payments/{payment}', [PaymentController::class, 'tenantShow'])->name('payments.show');
+        Route::get('/maintenance', [TenantController::class, 'maintenanceRequests'])->name('maintenance.index');
+        Route::post('/maintenance', [TenantController::class, 'storeMaintenanceRequest'])->name('maintenance.store');
+    });
+
+
+    // Buyer Routes
+    Route::prefix('buyer')->name('buyer.')->middleware(['role:Buyer'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'buyerDashboard'])->name('dashboard');
+        Route::get('/properties', [PropertyController::class, 'buyerIndex'])->name('properties.index');
+        Route::get('/properties/{property}', [PropertyController::class, 'buyerShow'])->name('properties.show');
+        Route::get('/favorites', [\App\Http\Controllers\BuyerController::class, 'favorites'])->name('favorites');
+        Route::post('/favorites/{property}', [\App\Http\Controllers\BuyerController::class, 'toggleFavorite'])->name('favorites.toggle');
+    });
+
+    // Maintenance Routes
+    Route::prefix('maintenance')->name('maintenance.')->middleware(['role:Maintenance'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'maintenanceDashboard'])->name('dashboard');
+        Route::get('/requests', [\App\Http\Controllers\MaintenanceController::class, 'index'])->name('requests.index');
+        Route::get('/requests/{request}', [\App\Http\Controllers\MaintenanceController::class, 'show'])->name('requests.show');
+        Route::put('/requests/{request}', [\App\Http\Controllers\MaintenanceController::class, 'update'])->name('requests.update');
+        Route::get('/schedule', [\App\Http\Controllers\MaintenanceController::class, 'schedule'])->name('schedule');
+    });
+
+    // Common routes for multiple roles
+    Route::middleware(['role:Admin,Landlord,Tenant,Agent,Buyer,Maintenance'])->group(function () {
+        Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+        
+        Route::get('/messages', [\App\Http\Controllers\MessageController::class, 'index'])->name('messages.index');
+        Route::post('/messages', [\App\Http\Controllers\MessageController::class, 'store'])->name('messages.store');
+        Route::get('/messages/{user}', [\App\Http\Controllers\MessageController::class, 'conversation'])->name('messages.conversation');
     });
 });
 
