@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\Route;
 
 // Welcome page
 Route::get('/', function () {
-    return view('welcome');
-});
+    return view('public_pages.welcome');
+})->name('public_pages.welcome');
 
 // Login redirect based on role
 Route::get('/dashboard', function () {

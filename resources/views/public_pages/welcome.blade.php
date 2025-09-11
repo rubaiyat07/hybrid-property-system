@@ -1,21 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@yield('title', 'HybridEstate - Revolutionary Property Investment Platform')</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    
-    <!--Custome css (welcome.css)-->
-    <link rel="stylesheet" href="{{ asset('css/welcome.css')}}">
+@extends('layouts.guest')
 
-</head>
-<body>
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+@section('title', 'HybridEstate - Revolutionary Property Investment Platform')
 
-    <!-- Navigation -->
-    @include('partials.header')
+@section('content')
 
     <!-- Hero Section -->
     <section class="hero" id="home">
@@ -28,23 +15,34 @@
                     <a href="#features" class="btn-secondary">Learn More</a>
                 </div>
             </div>
+
             <div class="hero-visual">
+                <!-- Property Cards -->
                 <div class="property-card">
                     <div class="card-header">
                         <div class="property-icon"><i class="fas fa-building"></i></div>
-                        <div class="card-content"><h3>Smart Office Complex</h3><p>AI-powered workspace with 12% annual returns</p></div>
+                        <div class="card-content">
+                            <h3>Smart Office Complex</h3>
+                            <p>AI-powered workspace with 12% annual returns</p>
+                        </div>
                     </div>
                 </div>
                 <div class="property-card">
                     <div class="card-header">
                         <div class="property-icon"><i class="fas fa-home"></i></div>
-                        <div class="card-content"><h3>Hybrid Residential</h3><p>IoT-enabled apartments with sustainable features</p></div>
+                        <div class="card-content">
+                            <h3>Hybrid Residential</h3>
+                            <p>IoT-enabled apartments with sustainable features</p>
+                        </div>
                     </div>
                 </div>
                 <div class="property-card">
                     <div class="card-header">
                         <div class="property-icon"><i class="fas fa-store"></i></div>
-                        <div class="card-content"><h3>Digital Retail Space</h3><p>Phygital stores with AR/VR capabilities</p></div>
+                        <div class="card-content">
+                            <h3>Digital Retail Space</h3>
+                            <p>Phygital stores with AR/VR capabilities</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -86,7 +84,7 @@
         </div>
     </section>
 
-    <!-- HOUSE RENT Section -->
+    <!-- Rent Section -->
     <section class="rent" id="rent">
         <div class="section-header">
             <h2>House Rent</h2>
@@ -119,14 +117,15 @@
         </div>
     </section>
 
-    <!-- OUR CUSTOMERS / Testimonials -->
+    <!-- Testimonials -->
     <section class="testimonials" id="customers">
         <div class="testi-container">
             <div class="section-header" style="color:#fff;">
-                <h2 style="color:#fff;">Our Customers</h2>
+                <h2>Our Customers</h2>
                 <p style="color:rgba(255,255,255,0.9)">Hear from investors and tenants who trust HybridEstate.</p>
             </div>
             <div class="testi-grid">
+                <!-- Testimonial Cards -->
                 <div class="testi-card">
                     <div class="testi-head">
                         <div class="avatar">AR</div>
@@ -140,6 +139,7 @@
                     </div>
                     <p>“The analytics helped me rebalance my portfolio and boost returns by 15% in two quarters.”</p>
                 </div>
+
                 <div class="testi-card">
                     <div class="testi-head">
                         <div class="avatar">MS</div>
@@ -153,6 +153,7 @@
                     </div>
                     <p>“IoT-enabled apartment means lower bills and quick maintenance. Loved the seamless onboarding.”</p>
                 </div>
+
                 <div class="testi-card">
                     <div class="testi-head">
                         <div class="avatar">TS</div>
@@ -179,11 +180,4 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    @include('partials.footer')
- 
-    <!--Custome js (welcome.js)-->
-    <script src="{{ asset('js/welcome.js') }}"></script>
-
-</body>
-</html>
+@endsection
