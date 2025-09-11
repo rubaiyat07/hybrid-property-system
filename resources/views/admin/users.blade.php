@@ -169,8 +169,8 @@
     <!-- Pagination -->
     @if($users->hasPages())
         <div class="pagination">
-            {{ $users->links() }}
-        </div>
+         {{ $users->links() }}
+     </div>
     @endif
 </div>
 
