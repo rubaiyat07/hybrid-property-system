@@ -1,7 +1,7 @@
 <div class="admin-sidebar">
     <ul>
         <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-        <li><a href="#users.index">Users Management</a></li>
+        <li><a href="{{ route('admin.users.index') }}">Users Management</a></li>
         <li><a href="#properties.index">Properties</a></li>
         <li><a href="#units.index">Units</a></li>
         <li><a href="#tenants.index">Tenants</a></li>

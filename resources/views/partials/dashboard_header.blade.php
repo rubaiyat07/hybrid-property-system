@@ -1,6 +1,6 @@
 <nav class="navbar">
     <div class="nav-container">
-        <div class="logo"><a href="{{ route('public_pages.welcome') }}">HybridEstate</a></div>
+        <div class="logo"><a href="{{ route('admin.dashboard') }}">HybridEstate</a></div>
 
         <div class="user-menu">
             <div class="menu-icon" onclick="toggleDropdown()">
