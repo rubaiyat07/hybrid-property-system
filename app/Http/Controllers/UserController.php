@@ -12,36 +12,37 @@ class UserController extends Controller
 {
     // List all users with search and filter capability
     public function index(Request $request)
-    {
-        $query = User::with('roles');
-        
-        // Search functionality
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
-            });
-        }
-        
-        // Filter by role
-        if ($request->has('role') && !empty($request->role)) {
-            $query->whereHas('roles', function($q) use ($request) {
-                $q->where('name', $request->role);
-            });
-        }
-        
-        // Filter by status
-        if ($request->has('status') && !empty($request->status)) {
-            $query->where('status', $request->status);
-        }
-        
-        $users = $query->latest()->get();
-        $roles = Role::all();
-        
-        return view('admin.users.index', compact('users', 'roles'));
+{
+    $query = User::with('roles');
+    
+    // Search functionality
+    if ($request->has('search') && !empty($request->search)) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%")
+              ->orWhere('phone', 'like', "%{$search}%");
+        });
     }
+    
+    // Filter by role
+    if ($request->has('role') && !empty($request->role)) {
+        $query->whereHas('roles', function($q) use ($request) {
+            $q->where('name', $request->role);
+        });
+    }
+    
+    // Filter by status
+    if ($request->has('status') && !empty($request->status)) {
+        $query->where('status', $request->status);
+    }
+    
+    // Use paginate() instead of get() to enable pagination
+    $users = $query->latest()->paginate(10); // 10 users per page
+    $roles = Role::all();
+    
+    return view('admin.users', compact('users', 'roles'));
+}
 
     // Show create user form
     public function create()
