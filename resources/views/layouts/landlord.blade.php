@@ -30,7 +30,7 @@
     @include('partials.dashboard_footer')
 
     <!-- Custom JS -->
-    <script src="{{ asset('js/welcome.js') }}"></script>
     <script src="{{ asset('js/dashboard.js') }}"></script>
+    <script src="{{ asset('js/owner.js') }}"></script>
 </body>
 </html>

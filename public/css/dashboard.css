@@ -1,3 +1,11 @@
+/* Body */
+body {
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    overflow-x: hidden;
+}
+
 /* Admin Wrapper */
 .admin-wrapper {
     display: flex;
@@ -26,7 +34,7 @@
 
 .logo {
     font-size: 1.8rem;
-    font-weight: 700;
+    font-weight: 800;
     color: #1f2937;
 }
 

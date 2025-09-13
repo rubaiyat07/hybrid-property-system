@@ -1,80 +1,34 @@
-<?php
+<header class="owner-header">
+    <div class="logo">
+        <h2>HybridEstate</h2>
+    </div>
 
-namespace Database\Seeders;
+    <nav class="nav-links">
+        <a href="{{ route('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a>
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
-use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Hash;
+        {{-- Landlord specific --}}
+        @if(Auth::user()->hasRole('landlord'))
+            <a href="{{ route('landlord.properties') }}"><i class="fas fa-building"></i> Properties</a>
+            <a href="{{ route('landlord.tenants') }}"><i class="fas fa-users"></i> Tenants</a>
+            <a href="{{ route('landlord.leases') }}"><i class="fas fa-file-contract"></i> Leases</a>
+            <a href="{{ route('landlord.payments') }}"><i class="fas fa-credit-card"></i> Payments</a>
+        @endif
 
-class UserSeeder extends Seeder
-{
-    public function run()
-    {
-        // Creating Roles using Spatie
-        $roles = ['Admin', 'Landlord', 'Tenant', 'Agent', 'Buyer', 'Maintenance'];
-        foreach ($roles as $roleName) {
-            Role::firstOrCreate(['name' => $roleName]);
-        }
+        {{-- Agent specific --}}
+        @if(Auth::user()->hasRole('agent'))
+            <a href="{{ route('agent.properties') }}"><i class="fas fa-briefcase"></i> Assigned Properties</a>
+            <a href="{{ route('agent.clients') }}"><i class="fas fa-user-tie"></i> Clients</a>
+            <a href="{{ route('agent.reports') }}"><i class="fas fa-chart-line"></i> Reports</a>
+        @endif
 
-        // Default Users with role mapping
-        $users = [
-            [
-                'name' => 'Admin',
-                'email' => 'admin@example.com',
-                'phone' => '01710000001',
-                'password' => Hash::make('admin123'),
-                'role' => 'Admin',
-            ],
-            [
-                'name' => 'Aftab Alamgir',
-                'email' => 'landlord@example.com',
-                'phone' => '01710000002',
-                'password' => Hash::make('landlord123'),
-                'role' => 'Landlord',
-            ],
-            [
-                'name' => 'Jannat Ara',
-                'email' => 'tenant@example.com',
-                'phone' => '01710000003',
-                'password' => Hash::make('tenant123'),
-                'role' => 'Tenant',
-            ],
-            [
-                'name' => 'Hasanuzzaman Khan',
-                'email' => 'agent@example.com',
-                'phone' => '01710000004',
-                'password' => Hash::make('agent123'),
-                'role' => 'Agent',
-            ],
-            [
-                'name' => 'Bashir Ahmed',
-                'email' => 'buyer@example.com',
-                'phone' => '01710000005',
-                'password' => Hash::make('buyer123'),
-                'role' => 'Buyer',
-            ],
-            [
-                'name' => 'Kalam Ali',
-                'email' => 'maintenance@example.com',
-                'phone' => '01710000006',
-                'password' => Hash::make('maintenance123'),
-                'role' => 'Maintenance',
-            ],
-        ];
-
-        foreach ($users as $data) {
-            $user = User::firstOrCreate(
-                ['email' => $data['email']],
-                [
-                    'name' => $data['name'],
-                    'phone' => $data['phone'],
-                    'password' => $data['password'],
-                ]
-            );
-
-            // Assign role using Spatie
-            $user->assignRole($data['role']);
-        }
-    }
-}
+        {{-- Common --}}
+        <a href="{{ route('profile.edit') }}"><i class="fas fa-user-cog"></i> Profile</a>
+        <a href="{{ route('logout') }}"
+           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+            @csrf
+        </form>
+    </nav>
+</header>
