@@ -3,7 +3,7 @@
     <div class="logo">
         <h2 class="text-2xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-600 
                    bg-clip-text text-transparent">
-            HybridEstate
+            <a href="{{ route('landlord.homepage') }}">HybridEstate</a>
         </h2>
     </div>
 
@@ -14,27 +14,40 @@
 
     <!-- Nav Links -->
     <nav class="nav-links flex items-center gap-6">
-        <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">
-            <i class="fas fa-building mr-1"></i> Properties
-        </a>
 
-        <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">
-            <i class="fas fa-users mr-1"></i> Tenants
-        </a>
+        {{-- 🔹 Landlord --}}
+        @role('Landlord')
+            <a href="{{ route('landlord.homepage') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Home</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">My Properties</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Tenants</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Leases</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Payments</a>
+        @endrole
 
-        <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">
-            <i class="fas fa-file-contract mr-1"></i> Leases
-        </a>
+        {{-- 🔹 Agent --}}
+        @role('Agent')
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Property Listings</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Clients</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Leads</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Deals</a>
+        @endrole
 
-        <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">
-            <i class="fas fa-credit-card mr-1"></i> Payments
-        </a>
+        {{-- 🔹 Tenant --}}
+        @role('Tenant')
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Find Rentals</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">My Lease</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Payments</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Support</a>
+        @endrole
 
-        <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">
-            <i class="fas fa-envelope mr-1"></i> Messages
-        </a>
+        {{-- 🔹 Buyer --}}
+        @role('Buyer')
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Browse Properties</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Saved Listings</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Inquiries</a>
+        @endrole
 
-        <!-- 🔍 Search bar -->
+        <!-- 🔍 Search bar (common for all roles) -->
         <div class="search-bar flex items-center ml-4">
             <input type="text" id="search" name="search" placeholder="Search..."
                 class="px-3 py-1 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400">
@@ -45,10 +58,10 @@
 
         <!-- 👤 Profile dropdown -->
         <div class="profile-dropdown">
-            <div class="profile-trigger">
+            <div class="profile-trigger cursor-pointer">
                 @if(Auth::user()->profile_photo_url)
                     <img src="{{ Auth::user()->profile_photo_url }}" 
-                         alt="Profile" />
+                         alt="Profile" class="w-10 h-10 rounded-full"/>
                 @else
                     <i class="fas fa-user-circle text-3xl text-gray-600"></i>
                 @endif
