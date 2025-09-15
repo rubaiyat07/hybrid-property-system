@@ -37,15 +37,15 @@ Route::get('/dashboard', function () {
     if ($user->hasRole('Admin')) {
         return redirect()->route('admin.dashboard');
     } elseif ($user->hasRole('Landlord')) {
-        return redirect()->route('landlord.dashboard');
+        return redirect()->route('landlord.homepage');
     } elseif ($user->hasRole('Tenant')) {
-        return redirect()->route('tenant.dashboard');
+        return redirect()->route('tenant.homepage');
     } elseif ($user->hasRole('Agent')) {
-        return redirect()->route('agent.dashboard');
+        return redirect()->route('agent.homepage');
     } elseif ($user->hasRole('Buyer')) {
-        return redirect()->route('buyer.dashboard');
+        return redirect()->route('buyer.homepage');
     } elseif ($user->hasRole('Maintenance')) {
-        return redirect()->route('maintenance.dashboard');
+        return redirect()->route('maintenance.homepage');
     }
     abort(403); // Unknown role
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -104,7 +104,7 @@ Route::middleware(['auth'])->group(function () {
     // Landlord Routes
     Route::prefix('landlord')->name('landlord.')->middleware(['role:Landlord'])->group(function () {
     // Dashboard
-    Route::get('/dashboard', [\App\Http\Controllers\LandlordController::class, 'landlordDashboard'])->name('dashboard');
+    Route::get('/homepage', [\App\Http\Controllers\LandlordController::class, 'landlordDashboard'])->name('homepage');
     // Properties (Landlord can manage own properties)
     Route::resource('properties', PropertyController::class)->except(['destroy']); 
     // Units (under landlord’s properties)
