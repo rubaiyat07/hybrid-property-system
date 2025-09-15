@@ -8,20 +8,16 @@ use App\Models\Property;
 use App\Models\Unit;
 use App\Models\Lease;
 use App\Models\Payment;
+// যদি পরবর্তীতে DB থেকে Ads আনতে চাও তাহলে নিচে যোগ করো
+// use App\Models\Ad;
 
 class LandlordController extends Controller
 {
-    /**
-     * Display the landlord dashboard
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function landlordDashboard()
     {
-        // Get the authenticated user
         $user = Auth::user();
         
-        // Get landlord statistics
+        // Landlord statistics
         $stats = [
             'total_properties' => Property::where('owner_id', $user->id)->count(),
             'total_units' => Unit::whereHas('property', function($query) use ($user) {
@@ -47,7 +43,7 @@ class LandlordController extends Controller
             })->where('status', 'pending')->count(),
         ];
         
-        // Get recent payments
+        // Recent payments
         $recentPayments = Payment::whereHas('lease.unit.property', function($query) use ($user) {
                 $query->where('owner_id', $user->id);
             })
@@ -56,7 +52,7 @@ class LandlordController extends Controller
             ->take(5)
             ->get();
         
-        // Get recent leases
+        // Recent leases
         $recentLeases = Lease::whereHas('unit.property', function($query) use ($user) {
                 $query->where('owner_id', $user->id);
             })
@@ -65,13 +61,44 @@ class LandlordController extends Controller
             ->take(5)
             ->get();
         
-        // Get properties for quick access
+        // Properties for quick access
         $properties = Property::where('owner_id', $user->id)
             ->withCount('units')
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
+
+        // Dummy ads data 
+        $ads = [
+            (object) ['image_url' => '/images/ad1.jpg'],
+            (object) ['image_url' => '/images/ad2.jpg'],
+            (object) ['image_url' => '/images/ad3.jpg'],
+        ];
+
+        // Active Listings (Other landlords/agents)
+    $activeListings = Property::where('owner_id', '!=', $user->id)
+        ->with('user') // relation to owner/agent
+        ->where('status', 'active')
+        ->latest()
+        ->take(10)
+        ->get();
+
+    // Active Rentals (Other landlords)
+    $activeRentals = Lease::whereHas('unit.property', fn($q) => $q->where('owner_id', '!=', $user->id))
+        ->with(['unit.property', 'tenant'])
+        ->where('end_date', '>=', now())
+        ->latest()
+        ->take(10)
+        ->get();
         
-        return view('landlord.dashboard', compact('stats', 'recentPayments', 'recentLeases', 'properties'));
+        return view('landlord.homepage', compact(
+            'stats',
+            'recentPayments',
+            'recentLeases',
+            'properties',
+            'ads',
+            'activeListings',
+            'activeRentals'   
+        ));
     }
 }
