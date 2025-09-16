@@ -2,7 +2,7 @@
     <ul>
         <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
         <li><a href="{{ route('admin.users.index') }}">Users Management</a></li>
-        <li><a href="{{ route('admin.property.property.index') }}">Properties</a></li>
+        <li><a href="{{ route('admin.property.index') }}">Properties</a></li>
         <li><a href="#units.index">Units</a></li>
         <li><a href="#tenants.index">Tenants</a></li>
         <li><a href="#leases.index">Leases</a></li>

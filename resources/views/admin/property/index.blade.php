@@ -226,9 +226,9 @@
 </div>
 
 <!-- Bulk Actions Modals -->
-@include('admin.property.partials.bulk-approve-modal')
-@include('admin.property.partials.bulk-reject-modal')
-@include('admin.property.partials.quick-action-modals')
+@include('partials.admin.property.bulk-approve-modal')
+@include('partials.admin.property.bulk-reject-modal')
+@include('partials.admin.property.quick-action-modals')
 
 @push('scripts')
 <script>
