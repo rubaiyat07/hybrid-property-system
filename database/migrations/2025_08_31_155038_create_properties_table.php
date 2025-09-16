@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('city');
             $table->string('state');
             $table->string('zip')->nullable();
-            $table->enum('type', ['residential', 'commercial', 'land', 'plot']);
+            $table->enum('type', ['apartment', 'house', 'condo', 'townhouse','residential', 'commercial', 'land', 'plot', 'other']);
             $table->enum('status', ['rent', 'sale'])->default('rent');
             $table->text('description')->nullable();
-            $table->decimal('price_or_rent', 15, 2)->nullable;
+            $table->decimal('price_or_rent', 15, 2)->nullable();
             $table->timestamps();
 
             $table->foreign('owner_id')->references('id')->on('users')->cascadeOnDelete();

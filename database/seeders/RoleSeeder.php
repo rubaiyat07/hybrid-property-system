@@ -21,7 +21,10 @@ class RoleSeeder extends Seeder
         ];
 
         foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role]);
+            Role::firstOrCreate([
+                'name' => $role,
+                'guard_name' => 'web', // Ensure correct guard
+            ]);
         }
 
         // Example Permissions (optional)
@@ -34,11 +37,16 @@ class RoleSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web', // Ensure correct guard
+            ]);
         }
 
-        // Assign permissions to Admin
+        // Assign all permissions to Admin
         $adminRole = Role::where('name', 'Admin')->first();
-        $adminRole->givePermissionTo(Permission::all());
+        if ($adminRole) {
+            $adminRole->givePermissionTo(Permission::all());
+        }
     }
 }
