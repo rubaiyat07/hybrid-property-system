@@ -43,9 +43,17 @@ class PropertyController extends Controller
      */
     public function create()
     {
-        return view('landlord.property.create');
+        $propertyTypes = [
+            'apartment' => 'Apartment',
+            'house' => 'House',
+            'condo' => 'Condo',
+            'townhouse' => 'Townhouse',
+            'commercial' => 'Commercial',
+            'other' => 'Other',
+        ];
+        
+        return view('landlord.property.create', compact('propertyTypes'));
     }
-
     /**
      * Store a newly created property (registration request) in storage.
      */
@@ -119,7 +127,16 @@ class PropertyController extends Controller
                 ->with('error', 'Cannot edit rejected properties. Please submit a new registration.');
         }
 
-        return view('landlord.property.edit', compact('property'));
+        $propertyTypes = [
+            'apartment' => 'Apartment',
+            'house' => 'House',
+            'condo' => 'Condo',
+            'townhouse' => 'Townhouse',
+            'commercial' => 'Commercial',
+            'other' => 'Other',
+        ];
+        
+        return view('landlord.property.edit', compact('property', 'propertyTypes'));
     }
 
     /**
