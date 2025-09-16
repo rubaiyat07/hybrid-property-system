@@ -3,12 +3,14 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminPropertyController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\LeaseController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\PropertyController as AdminPropertyManagementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -75,7 +77,29 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::post('/users/bulk-action', [UserController::class, 'bulkAction'])->name('users.bulk-action');
         
-        // Property Management
+        // Property Registration Management (NEW)
+        Route::get('/property-registrations', [AdminPropertyManagementController::class, 'index'])
+             ->name('property.index');
+        Route::get('/property-registrations/{property}', [AdminPropertyManagementController::class, 'show'])
+             ->name('property.show');
+        Route::post('/property-registrations/{property}/approve', [AdminPropertyManagementController::class, 'approve'])
+             ->name('property.approve');
+        Route::post('/property-registrations/{property}/reject', [AdminPropertyManagementController::class, 'reject'])
+             ->name('property.reject');
+        Route::post('/property-registrations/{property}/reset-pending', [AdminPropertyManagementController::class, 'resetToPending'])
+             ->name('property.reset-pending');
+        
+        // Bulk Property Actions (NEW)
+        Route::post('/property-registrations/bulk-approve', [AdminPropertyManagementController::class, 'bulkApprove'])
+             ->name('property.bulk-approve');
+        Route::post('/property-registrations/bulk-reject', [AdminPropertyManagementController::class, 'bulkReject'])
+             ->name('property.bulk-reject');
+        
+        // Property Registration Dashboard (NEW)
+        Route::get('/property-dashboard', [AdminPropertyManagementController::class, 'dashboard'])
+             ->name('property.dashboard');
+        
+        // Original Property Management (for direct admin management)
         Route::resource('properties', PropertyController::class);
         
         // Tenant Management
@@ -100,37 +124,50 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
     });
 
-
     // Landlord Routes
     Route::prefix('landlord')->name('landlord.')->middleware(['role:Landlord'])->group(function () {
-    // Dashboard
-    Route::get('/homepage', [\App\Http\Controllers\LandlordController::class, 'landlordDashboard'])->name('homepage');
-    // Properties (Landlord can manage own properties)
-    Route::resource('properties', PropertyController::class)->except(['destroy']); 
-    // Units (under landlord’s properties)
-    Route::resource('units', UnitController::class)->except(['destroy']); 
-    // Tenants (view tenants assigned to landlord’s properties)
-    Route::resource('tenants', TenantController::class)->only(['index', 'show']);
-    // Leases (landlord creates leases for tenants)
-    Route::resource('leases', LeaseController::class)->only(['index', 'show', 'create', 'store']);
-    // Payments (landlord can view payments received)
-    Route::resource('payments', PaymentController::class)->only(['index', 'show']);
+        // Dashboard
+        Route::get('/homepage', [\App\Http\Controllers\LandlordController::class, 'landlordHomepage'])->name('homepage');
+        
+        // Property Registration and Management (UPDATED)
+        Route::resource('property', PropertyController::class)->except(['destroy']); 
+        
+        // Property Resubmission (NEW)
+        Route::post('property/{property}/resubmit', [PropertyController::class, 'resubmit'])
+             ->name('property.resubmit');
+        
+        // Units (under landlord's approved properties only) (UPDATED)
+        Route::resource('units', UnitController::class)->except(['destroy']); 
+        Route::get('units/create/{property_id?}', [UnitController::class, 'create'])
+             ->name('units.create');
+        Route::get('property/{property}/units', [UnitController::class, 'getPropertyUnits'])
+             ->name('property.units');
+        
+        // Tenants (view tenants assigned to landlord's properties)
+        Route::resource('tenants', TenantController::class)->only(['index', 'show']);
+        
+        // Leases (landlord creates leases for tenants)
+        Route::resource('leases', LeaseController::class)->only(['index', 'show', 'create', 'store']);
+        
+        // Payments (landlord can view payments received)
+        Route::resource('payments', PaymentController::class)->only(['index', 'show']);
     });
 
-
-    // Agent Routes
+    // Agent Routes (UPDATED - only approved properties)
     Route::prefix('agent')->name('agent.')->middleware(['role:Agent'])->group(function () {
-    // Dashboard
-    Route::get('/dashboard', [\App\Http\Controllers\AgentController::class, 'agentDashboard'])->name('dashboard');
-    // Assigned Properties (Agent can see landlord’s assigned properties)
-    Route::get('/properties', [PropertyController::class, 'agentIndex'])->name('properties.index');
-    Route::get('/properties/{property}', [PropertyController::class, 'agentShow'])->name('properties.show');
-    // Leads (agent manages potential buyers/tenants)
-    Route::resource('leads', \App\Http\Controllers\LeadController::class)->except(['destroy']);
-    // Transactions (sales/rental transactions handled by agent)
-    Route::resource('transactions', \App\Http\Controllers\TransactionController::class)->only(['index', 'show', 'create', 'store']);
+        // Dashboard
+        Route::get('/dashboard', [\App\Http\Controllers\AgentController::class, 'agentDashboard'])->name('dashboard');
+        
+        // Assigned Approved Properties (UPDATED)
+        Route::get('/properties', [PropertyController::class, 'agentIndex'])->name('properties.index');
+        Route::get('/properties/{property}', [PropertyController::class, 'agentShow'])->name('properties.show');
+        
+        // Leads (agent manages potential buyers/tenants)
+        Route::resource('leads', \App\Http\Controllers\LeadController::class)->except(['destroy']);
+        
+        // Transactions (sales/rental transactions handled by agent)
+        Route::resource('transactions', \App\Http\Controllers\TransactionController::class)->only(['index', 'show', 'create', 'store']);
     });
-
 
     // Tenant Routes
     Route::prefix('tenant')->name('tenant.')->middleware(['role:Tenant'])->group(function () {
@@ -143,8 +180,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/maintenance', [TenantController::class, 'storeMaintenanceRequest'])->name('maintenance.store');
     });
 
-
-    // Buyer Routes
+    // Buyer Routes (UPDATED - only approved, active properties)
     Route::prefix('buyer')->name('buyer.')->middleware(['role:Buyer'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'buyerDashboard'])->name('dashboard');
         Route::get('/properties', [PropertyController::class, 'buyerIndex'])->name('properties.index');
@@ -173,5 +209,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/messages/{user}', [\App\Http\Controllers\MessageController::class, 'conversation'])->name('messages.conversation');
     });
 });
+
+// Public property listings (no authentication required) - UPDATED to show only approved properties
+Route::get('/public-properties', [PropertyController::class, 'buyerIndex'])->name('public.properties.index');
+Route::get('/public-properties/{property}', [PropertyController::class, 'buyerShow'])->name('public.properties.show');
 
 require __DIR__.'/auth.php';

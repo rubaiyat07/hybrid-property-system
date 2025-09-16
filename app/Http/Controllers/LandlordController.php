@@ -13,7 +13,7 @@ use App\Models\Payment;
 
 class LandlordController extends Controller
 {
-    public function landlordDashboard()
+    public function landlordHomepage()
     {
         $user = Auth::user();
         

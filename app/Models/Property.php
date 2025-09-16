@@ -7,22 +7,48 @@ use Illuminate\Database\Eloquent\Model;
 
 class Property extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'owner_id', 
         'name', 
         'address', 
         'city', 
         'state', 
-        'zip',
+        'zip_code',
         'type', 
         'status', 
+        'registration_status',
         'description', 
         'price_or_rent',
+        'image',
+        'registration_notes',
+        'approved_at',
+        'approved_by'
     ];
+
+    protected $dates = [
+        'approved_at'
+    ];
+
+    // Registration status constants
+    const REGISTRATION_PENDING = 'pending';
+    const REGISTRATION_APPROVED = 'approved';
+    const REGISTRATION_REJECTED = 'rejected';
+
+    // Property status constants
+    const STATUS_ACTIVE = 'active';
+    const STATUS_INACTIVE = 'inactive';
+    const STATUS_MAINTENANCE = 'maintenance';
 
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function units()
@@ -63,5 +89,83 @@ class Property extends Model
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function leases()
+    {
+        return $this->hasManyThrough(Lease::class, Unit::class);
+    }
+
+    // Scopes
+    public function scopePending($query)
+    {
+        return $query->where('registration_status', self::REGISTRATION_PENDING);
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('registration_status', self::REGISTRATION_APPROVED);
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('registration_status', self::REGISTRATION_REJECTED);
+    }
+
+    // Accessors
+    public function getIsApprovedAttribute()
+    {
+        return $this->registration_status === self::REGISTRATION_APPROVED;
+    }
+
+    public function getIsPendingAttribute()
+    {
+        return $this->registration_status === self::REGISTRATION_PENDING;
+    }
+
+    public function getIsRejectedAttribute()
+    {
+        return $this->registration_status === self::REGISTRATION_REJECTED;
+    }
+
+    public function getRegistrationStatusBadgeAttribute()
+    {
+        switch ($this->registration_status) {
+            case self::REGISTRATION_PENDING:
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>';
+            case self::REGISTRATION_APPROVED:
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>';
+            case self::REGISTRATION_REJECTED:
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>';
+            default:
+                return '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>';
+        }
+    }
+
+    // Methods
+    public function canAddUnits()
+    {
+        return $this->is_approved;
+    }
+
+    public function approve($adminId, $notes = null)
+    {
+        $this->update([
+            'registration_status' => self::REGISTRATION_APPROVED,
+            'approved_by' => $adminId,
+            'approved_at' => now(),
+            'registration_notes' => $notes,
+            'status' => self::STATUS_ACTIVE
+        ]);
+    }
+
+    public function reject($adminId, $notes)
+    {
+        $this->update([
+            'registration_status' => self::REGISTRATION_REJECTED,
+            'approved_by' => $adminId,
+            'registration_notes' => $notes,
+            'status' => self::STATUS_INACTIVE
+        ]);
     }
 }

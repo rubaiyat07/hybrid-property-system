@@ -3,82 +3,230 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Unit;
+use App\Models\Property;
 
 class UnitController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = Unit::with('property')
+            ->whereHas('property', function($q) {
+                $q->where('owner_id', auth()->id())
+                  ->where('registration_status', Property::REGISTRATION_APPROVED);
+            });
+
+        if ($request->filled('property_id')) {
+            $query->where('property_id', $request->property_id);
+        }
+
+        $units = $query->orderBy('created_at', 'desc')->paginate(10);
+
+        // Get approved properties for filter dropdown
+        $properties = Property::where('owner_id', auth()->id())
+            ->approved()
+            ->get();
+
+        return view('landlord.units.index', compact('units', 'properties'));
     }
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        $propertyId = $request->get('property_id');
+        $property = null;
+
+        if ($propertyId) {
+            $property = Property::where('id', $propertyId)
+                ->where('owner_id', auth()->id())
+                ->approved()
+                ->firstOrFail();
+        }
+
+        // Get all approved properties owned by the user for the dropdown
+        $properties = Property::where('owner_id', auth()->id())
+            ->approved()
+            ->get();
+
+        if ($properties->isEmpty()) {
+            return redirect()->route('landlord.property.index')
+                ->with('error', 'You need to have at least one approved property before creating units.');
+        }
+
+        return view('landlord.units.create', compact('properties', 'property'));
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'property_id' => 'required|exists:properties,id',
+            'unit_number' => 'required|string|max:255',
+            'floor' => 'nullable|string|max:255',
+            'size' => 'nullable|string|max:255',
+            'bedrooms' => 'nullable|integer|min:0',
+            'bathrooms' => 'nullable|integer|min:0',
+            'rent_amount' => 'required|numeric|min:0',
+            'features' => 'nullable|array',
+            'description' => 'nullable|string',
+        ]);
+
+        // Verify property ownership and approval
+        $property = Property::where('id', $request->property_id)
+            ->where('owner_id', auth()->id())
+            ->approved()
+            ->firstOrFail();
+
+        // Check if unit number already exists for this property
+        $existingUnit = Unit::where('property_id', $request->property_id)
+            ->where('unit_number', $request->unit_number)
+            ->first();
+
+        if ($existingUnit) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['unit_number' => 'Unit number already exists for this property.']);
+        }
+
+        $unit = Unit::create([
+            'property_id' => $request->property_id,
+            'unit_number' => $request->unit_number,
+            'floor' => $request->floor,
+            'size' => $request->size,
+            'bedrooms' => $request->bedrooms,
+            'bathrooms' => $request->bathrooms,
+            'rent_amount' => $request->rent_amount,
+            'status' => 'vacant',
+            'features' => $request->features ?? [],
+            'description' => $request->description,
+        ]);
+
+        return redirect()->route('landlord.property.show', $property)
+            ->with('success', 'Unit created successfully.');
     }
 
     /**
      * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Unit $unit)
     {
-        //
+        // Verify ownership through property
+        if ($unit->property->owner_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $unit->load(['property', 'leases.tenant', 'maintenanceRequests']);
+
+        return view('landlord.units.show', compact('unit'));
     }
 
     /**
      * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Unit $unit)
     {
-        //
+        // Verify ownership and property approval
+        if ($unit->property->owner_id !== auth()->id() || !$unit->property->is_approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        return view('landlord.units.edit', compact('unit'));
     }
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Unit $unit)
     {
-        //
+        // Verify ownership and property approval
+        if ($unit->property->owner_id !== auth()->id() || !$unit->property->is_approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'unit_number' => 'required|string|max:255',
+            'floor' => 'nullable|string|max:255',
+            'size' => 'nullable|string|max:255',
+            'bedrooms' => 'nullable|integer|min:0',
+            'bathrooms' => 'nullable|integer|min:0',
+            'rent_amount' => 'required|numeric|min:0',
+            'status' => 'required|in:vacant,occupied,maintenance',
+            'features' => 'nullable|array',
+            'description' => 'nullable|string',
+        ]);
+
+        // Check if unit number already exists for this property (excluding current unit)
+        $existingUnit = Unit::where('property_id', $unit->property_id)
+            ->where('unit_number', $request->unit_number)
+            ->where('id', '!=', $unit->id)
+            ->first();
+
+        if ($existingUnit) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['unit_number' => 'Unit number already exists for this property.']);
+        }
+
+        $unit->update([
+            'unit_number' => $request->unit_number,
+            'floor' => $request->floor,
+            'size' => $request->size,
+            'bedrooms' => $request->bedrooms,
+            'bathrooms' => $request->bathrooms,
+            'rent_amount' => $request->rent_amount,
+            'status' => $request->status,
+            'features' => $request->features ?? [],
+            'description' => $request->description,
+        ]);
+
+        return redirect()->route('landlord.units.show', $unit)
+            ->with('success', 'Unit updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Unit $unit)
     {
-        //
+        // Verify ownership and property approval
+        if ($unit->property->owner_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if unit has active leases
+        $activeLeases = $unit->leases()->where('end_date', '>=', now())->count();
+        
+        if ($activeLeases > 0) {
+            return redirect()->back()
+                ->with('error', 'Cannot delete unit with active leases.');
+        }
+
+        $propertyId = $unit->property_id;
+        $unit->delete();
+
+        return redirect()->route('landlord.property.show', $propertyId)
+            ->with('success', 'Unit deleted successfully.');
+    }
+
+    /**
+     * Get units for a specific property (AJAX endpoint)
+     */
+    public function getPropertyUnits(Property $property)
+    {
+        // Verify ownership and approval
+        if ($property->owner_id !== auth()->id() || !$property->is_approved) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $units = $property->units()->select('id', 'unit_number', 'status', 'rent_amount')->get();
+        
+        return response()->json($units);
     }
 }

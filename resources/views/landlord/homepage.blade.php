@@ -3,6 +3,11 @@
 @section('title', 'Homepage')
 
 @section('content')
+
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Home</h1>
+    
+</div>
 <div class="grid grid-cols-4 gap-6 mb-6">
     <div class="bg-white shadow rounded p-4 text-center">
         <h3 class="font-semibold text-gray-700">Total Properties</h3>

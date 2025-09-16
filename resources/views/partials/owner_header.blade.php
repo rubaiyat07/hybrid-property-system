@@ -15,16 +15,16 @@
     <!-- Nav Links -->
     <nav class="nav-links flex items-center gap-6">
 
-        {{-- 🔹 Landlord --}}
+        {{-- Landlord --}}
         @role('Landlord')
             <a href="{{ route('landlord.homepage') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Home</a>
-            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">My Properties</a>
+            <a href="{{ route('landlord.property.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">My Properties</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Tenants</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Leases</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Payments</a>
         @endrole
 
-        {{-- 🔹 Agent --}}
+        {{-- Agent --}}
         @role('Agent')
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Property Listings</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Clients</a>
@@ -32,7 +32,7 @@
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Deals</a>
         @endrole
 
-        {{-- 🔹 Tenant --}}
+        {{-- Tenant --}}
         @role('Tenant')
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Find Rentals</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">My Lease</a>
@@ -40,14 +40,14 @@
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Support</a>
         @endrole
 
-        {{-- 🔹 Buyer --}}
+        {{-- Buyer --}}
         @role('Buyer')
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Browse Properties</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Saved Listings</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Inquiries</a>
         @endrole
 
-        <!-- 🔍 Search bar (common for all roles) -->
+        <!-- Search bar (common for all roles) -->
         <div class="search-bar flex items-center ml-4">
             <input type="text" id="search" name="search" placeholder="Search..."
                 class="px-3 py-1 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400">
