@@ -179,16 +179,16 @@
                                     </a>
                                     
                                     @if($property->registration_status === 'pending')
-                                        <button onclick="quickApprove({{ $property->id }})" 
+                                        <button onclick="openQuickApproveModal({{ $property->id }}, '{{ addslashes($property->name) }}')" 
                                                 class="text-green-600 hover:text-green-900" title="Quick Approve">
                                             <i class="fas fa-check"></i>
                                         </button>
-                                        <button onclick="quickReject({{ $property->id }})" 
+                                        <button onclick="openQuickRejectModal({{ $property->id }}, '{{ addslashes($property->name) }}')" 
                                                 class="text-red-600 hover:text-red-900" title="Quick Reject">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     @elseif($property->registration_status !== 'pending')
-                                        <button onclick="resetToPending({{ $property->id }})" 
+                                        <button onclick="openResetToPendingModal({{ $property->id }}, '{{ addslashes($property->name) }}')" 
                                                 class="text-blue-600 hover:text-blue-900" title="Reset to Pending">
                                             <i class="fas fa-undo"></i>
                                         </button>
@@ -233,9 +233,14 @@
 @push('scripts')
 <script>
 // Select all checkbox functionality
-document.getElementById('selectAll').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.property-checkbox');
-    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.property-checkbox');
+            checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+        });
+    }
 });
 
 // Bulk approve modal
@@ -267,41 +272,16 @@ function closeBulkRejectModal() {
     document.getElementById('bulkRejectModal').classList.add('hidden');
 }
 
-// Quick actions
-function quickApprove(propertyId) {
-    document.getElementById('quickApprovePropertyId').value = propertyId;
-    document.getElementById('quickApproveModal').classList.remove('hidden');
-}
 
-function quickReject(propertyId) {
-    document.getElementById('quickRejectPropertyId').value = propertyId;
-    document.getElementById('quickRejectModal').classList.remove('hidden');
-}
-
-function resetToPending(propertyId) {
-    if (confirm('Are you sure you want to reset this property to pending status?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/property/${propertyId}/reset-pending`;
-        
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = csrfToken;
-        
-        form.appendChild(csrfInput);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
 
 // Close modals when clicking outside
-document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.classList.add('hidden');
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
     });
 });
 </script>

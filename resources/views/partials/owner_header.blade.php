@@ -19,7 +19,7 @@
         @role('Landlord')
             <a href="{{ route('landlord.homepage') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Home</a>
             <a href="{{ route('landlord.property.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">My Properties</a>
-            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Tenants</a>
+            <a href="{{ route('landlord.tenants.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Tenants</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Leases</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Payments</a>
         @endrole

@@ -10,16 +10,17 @@ class Property extends Model
     use HasFactory;
 
     protected $fillable = [
-        'owner_id', 
-        'name', 
-        'address', 
-        'city', 
-        'state', 
+        'owner_id',
+        'name',
+        'address',
+        'city',
+        'state',
         'zip_code',
-        'type', 
-        'status', 
+        'type',
+        'status',
+        'availability_status',
         'registration_status',
-        'description', 
+        'description',
         'price_or_rent',
         'image',
         'registration_notes',
@@ -155,7 +156,7 @@ class Property extends Model
             'approved_by' => $adminId,
             'approved_at' => now(),
             'registration_notes' => $notes,
-            'status' => self::STATUS_ACTIVE
+            'availability_status' => self::STATUS_ACTIVE
         ]);
     }
 
@@ -165,7 +166,7 @@ class Property extends Model
             'registration_status' => self::REGISTRATION_REJECTED,
             'approved_by' => $adminId,
             'registration_notes' => $notes,
-            'status' => self::STATUS_INACTIVE
+            'availability_status' => self::STATUS_INACTIVE
         ]);
     }
 }

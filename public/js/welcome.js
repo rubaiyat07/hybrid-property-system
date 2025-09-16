@@ -191,8 +191,11 @@ function applyRentFilters() {
 }
 
 ["rentSearch", "rentCity", "rentBeds", "rentPrice"].forEach((id) => {
-    document.getElementById(id).addEventListener("input", applyRentFilters);
-    document.getElementById(id).addEventListener("change", applyRentFilters);
+    const element = document.getElementById(id);
+    if (element) {
+        element.addEventListener("input", applyRentFilters);
+        element.addEventListener("change", applyRentFilters);
+    }
 });
 
 renderRent(rentItems);

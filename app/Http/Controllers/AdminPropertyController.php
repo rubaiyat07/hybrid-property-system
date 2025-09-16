@@ -200,7 +200,7 @@ class PropertyController extends Controller
             'pending_registrations' => Property::pending()->count(),
             'approved_properties' => Property::approved()->count(),
             'rejected_properties' => Property::rejected()->count(),
-            'active_properties' => Property::approved()->where('status', Property::STATUS_ACTIVE)->count(),
+            'active_properties' => Property::approved()->where('availability_status', Property::STATUS_ACTIVE)->count(),
             'recent_registrations' => Property::pending()->orderBy('created_at', 'desc')->take(5)->get(),
         ];
 

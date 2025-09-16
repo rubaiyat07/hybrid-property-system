@@ -8,6 +8,9 @@
     <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
+    <!-- Vite Compiled Assets -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/welcome.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
@@ -32,5 +35,7 @@
     <!-- Custom JS -->
     <script src="{{ asset('js/dashboard.js') }}"></script>
     <script src="{{ asset('js/owner.js') }}"></script>
+
+    @stack('scripts')
 </body>
 </html>

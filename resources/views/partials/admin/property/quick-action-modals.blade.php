@@ -29,7 +29,6 @@
 
                 <form id="quickApproveForm" method="POST">
                     @csrf
-                    <input type="hidden" name="_method" value="PATCH">
                     
                     <div class="mb-4">
                         <label for="quickApproveNotes" class="block text-sm font-medium text-gray-700 mb-2">
@@ -93,7 +92,6 @@
 
                 <form id="quickRejectForm" method="POST">
                     @csrf
-                    <input type="hidden" name="_method" value="PATCH">
                     
                     <div class="mb-4">
                         <label for="quickRejectNotes" class="block text-sm font-medium text-gray-700 mb-2">
@@ -182,7 +180,6 @@
 
                 <form id="resetToPendingForm" method="POST">
                     @csrf
-                    <input type="hidden" name="_method" value="PATCH">
                     
                     <!-- Action Buttons -->
                     <div class="flex items-center justify-end space-x-3 pt-4">

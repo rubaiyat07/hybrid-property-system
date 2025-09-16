@@ -159,18 +159,18 @@
                     @enderror
                 </div>
 
-                <!-- Property Status -->
+                <!-- Property Availability Status -->
                 <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
-                        Property Status
+                    <label for="availability_status" class="block text-sm font-medium text-gray-700 mb-1">
+                        Property Availability Status
                     </label>
-                    <select name="status" id="status" 
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('status') border-red-500 @enderror">
-                        <option value="active" {{ old('status', $property->status) == 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="inactive" {{ old('status', $property->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                        <option value="maintenance" {{ old('status', $property->status) == 'maintenance' ? 'selected' : '' }}>Under Maintenance</option>
+                    <select name="availability_status" id="availability_status"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent @error('availability_status') border-red-500 @enderror">
+                        <option value="active" {{ old('availability_status', $property->availability_status) == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="inactive" {{ old('availability_status', $property->availability_status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                        <option value="maintenance" {{ old('availability_status', $property->availability_status) == 'maintenance' ? 'selected' : '' }}>Under Maintenance</option>
                     </select>
-                    @error('status')
+                    @error('availability_status')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>

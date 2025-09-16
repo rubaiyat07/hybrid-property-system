@@ -400,18 +400,26 @@ function resetToPending() {
         csrfInput.name = '_token';
         csrfInput.value = csrfToken;
         
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'PUT';
+        
         form.appendChild(csrfInput);
+        form.appendChild(methodInput);
         document.body.appendChild(form);
         form.submit();
     }
 }
 
 // Close modals when clicking outside
-document.querySelectorAll('[id$="Modal"]').forEach(modal => {
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.classList.add('hidden');
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
     });
 });
 </script>

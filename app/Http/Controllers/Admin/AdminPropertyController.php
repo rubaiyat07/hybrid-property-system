@@ -191,6 +191,45 @@ class AdminPropertyController extends Controller
     }
 
     /**
+     * Get quick view data for property (AJAX).
+     */
+    public function quickView(Property $property)
+    {
+        $property->load(['owner', 'approver']);
+
+        return response()->json([
+            'success' => true,
+            'property' => [
+                'id' => $property->id,
+                'name' => $property->name,
+                'address' => $property->address,
+                'city' => $property->city,
+                'state' => $property->state,
+                'zip_code' => $property->zip_code,
+                'type' => $property->type,
+                'description' => $property->description,
+                'price_or_rent' => $property->price_or_rent,
+                'status' => $property->status,
+                'availability_status' => $property->availability_status,
+                'registration_status' => $property->registration_status,
+                'image' => $property->image,
+                'created_at' => $property->created_at,
+                'approved_at' => $property->approved_at,
+                'registration_notes' => $property->registration_notes,
+                'owner' => $property->owner ? [
+                    'id' => $property->owner->id,
+                    'name' => $property->owner->name,
+                ] : null,
+                'approver' => $property->approver ? [
+                    'id' => $property->approver->id,
+                    'name' => $property->approver->name,
+                ] : null,
+                'units_count' => $property->units()->count(),
+            ]
+        ]);
+    }
+
+    /**
      * Dashboard statistics for admin.
      */
     public function dashboard()
@@ -200,7 +239,7 @@ class AdminPropertyController extends Controller
             'pending_registrations' => Property::pending()->count(),
             'approved_properties' => Property::approved()->count(),
             'rejected_properties' => Property::rejected()->count(),
-            'active_properties' => Property::approved()->where('status', Property::STATUS_ACTIVE)->count(),
+            'active_properties' => Property::approved()->where('availability_status', Property::STATUS_ACTIVE)->count(),
             'recent_registrations' => Property::pending()->orderBy('created_at', 'desc')->take(5)->get(),
         ];
 

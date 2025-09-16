@@ -5,9 +5,20 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Property;
 use App\Models\Unit;
+use Illuminate\Support\Facades\Storage;
 
 class PropertyController extends Controller
 {
+    // Constants for property status
+    const STATUS_ACTIVE = 'active';
+    const STATUS_INACTIVE = 'inactive';
+    const STATUS_MAINTENANCE = 'maintenance';
+    
+    // Constants for registration status
+    const REGISTRATION_PENDING = 'pending';
+    const REGISTRATION_APPROVED = 'approved';
+    const REGISTRATION_REJECTED = 'rejected';
+
     /**
      * Display a listing of the landlord's properties.
      */
@@ -24,15 +35,18 @@ class PropertyController extends Controller
         // Count occupied units across all approved properties
         $occupiedUnits = Unit::whereHas('property', function($query) use ($user) {
             $query->where('owner_id', $user->id)
-                  ->where('registration_status', Property::REGISTRATION_APPROVED);
+                  ->where('registration_status', self::REGISTRATION_APPROVED);
         })->where('status', 'occupied')->count();
         
         // Statistics for different registration statuses
         $stats = [
             'total' => $properties->total(),
-            'approved' => Property::where('owner_id', $user->id)->approved()->count(),
-            'pending' => Property::where('owner_id', $user->id)->pending()->count(),
-            'rejected' => Property::where('owner_id', $user->id)->rejected()->count(),
+            'approved' => Property::where('owner_id', $user->id)
+                ->where('registration_status', self::REGISTRATION_APPROVED)->count(),
+            'pending' => Property::where('owner_id', $user->id)
+                ->where('registration_status', self::REGISTRATION_PENDING)->count(),
+            'rejected' => Property::where('owner_id', $user->id)
+                ->where('registration_status', self::REGISTRATION_REJECTED)->count(),
         ];
         
         return view('landlord.property.index', compact('properties', 'occupiedUnits', 'stats'));
@@ -54,6 +68,7 @@ class PropertyController extends Controller
         
         return view('landlord.property.create', compact('propertyTypes'));
     }
+
     /**
      * Store a newly created property (registration request) in storage.
      */
@@ -68,6 +83,7 @@ class PropertyController extends Controller
             'zip_code' => 'required|string',
             'description' => 'nullable|string',
             'price_or_rent' => 'nullable|numeric|min:0',
+            'availability_status' => 'nullable|in:active,inactive,maintenance',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -81,8 +97,9 @@ class PropertyController extends Controller
         $property->description = $request->description;
         $property->price_or_rent = $request->price_or_rent ?? 0;
         $property->owner_id = auth()->id();
-        $property->status = Property::STATUS_INACTIVE; // Inactive until approved
-        $property->registration_status = Property::REGISTRATION_PENDING; // Pending approval
+        $property->status = 'rent'; // Default to 'rent' or 'sale' as per your choice
+        $property->availability_status = self::STATUS_INACTIVE; // Inactive until approved
+        $property->registration_status = self::REGISTRATION_PENDING; // Pending approval
 
         // Handle image upload
         if ($request->hasFile('image')) {
@@ -122,7 +139,7 @@ class PropertyController extends Controller
         }
 
         // Don't allow editing if rejected - they need to create new registration
-        if ($property->registration_status === Property::REGISTRATION_REJECTED) {
+        if ($property->registration_status === self::REGISTRATION_REJECTED) {
             return redirect()->route('landlord.property.show', $property)
                 ->with('error', 'Cannot edit rejected properties. Please submit a new registration.');
         }
@@ -150,7 +167,7 @@ class PropertyController extends Controller
         }
 
         // Don't allow editing if rejected
-        if ($property->registration_status === Property::REGISTRATION_REJECTED) {
+        if ($property->registration_status === self::REGISTRATION_REJECTED) {
             return redirect()->route('landlord.property.show', $property)
                 ->with('error', 'Cannot edit rejected properties.');
         }
@@ -175,16 +192,22 @@ class PropertyController extends Controller
         $property->zip_code = $request->zip_code;
         $property->description = $request->description;
         $property->price_or_rent = $request->price_or_rent ?? $property->price_or_rent;
+        $property->availability_status = $request->availability_status ?? $property->availability_status;
 
         // Handle image upload
         if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($property->image && Storage::exists(str_replace('/storage/', 'public/', $property->image))) {
+                Storage::delete(str_replace('/storage/', 'public/', $property->image));
+            }
+            
             $imagePath = $request->file('image')->store('properties', 'public');
             $property->image = '/storage/' . $imagePath;
         }
 
         // If property was approved and is being edited, set back to pending for re-approval
-        if ($property->registration_status === Property::REGISTRATION_APPROVED) {
-            $property->registration_status = Property::REGISTRATION_PENDING;
+        if ($property->registration_status === self::REGISTRATION_APPROVED) {
+            $property->registration_status = self::REGISTRATION_PENDING;
             $property->approved_by = null;
             $property->approved_at = null;
             $property->registration_notes = null;
@@ -194,7 +217,7 @@ class PropertyController extends Controller
 
         return redirect()->route('landlord.property.index')
             ->with('success', 'Property updated successfully.' . 
-                ($property->registration_status === Property::REGISTRATION_PENDING ? ' It will be reviewed again by admin.' : ''));
+                ($property->registration_status === self::REGISTRATION_PENDING ? ' It will be reviewed again by admin.' : ''));
     }
 
     /**
@@ -215,6 +238,11 @@ class PropertyController extends Controller
                 ->with('error', 'Cannot delete property with active leases.');
         }
 
+        // Delete property image if exists
+        if ($property->image && Storage::exists(str_replace('/storage/', 'public/', $property->image))) {
+            Storage::delete(str_replace('/storage/', 'public/', $property->image));
+        }
+
         $property->delete();
 
         return redirect()->route('landlord.property.index')
@@ -232,14 +260,14 @@ class PropertyController extends Controller
         }
 
         // Only allow resubmission of rejected properties
-        if ($property->registration_status !== Property::REGISTRATION_REJECTED) {
+        if ($property->registration_status !== self::REGISTRATION_REJECTED) {
             return redirect()->route('landlord.property.show', $property)
                 ->with('error', 'This action is only available for rejected properties.');
         }
 
         // Reset registration status
         $property->update([
-            'registration_status' => Property::REGISTRATION_PENDING,
+            'registration_status' => self::REGISTRATION_PENDING,
             'approved_by' => null,
             'approved_at' => null,
             'registration_notes' => null,
@@ -254,7 +282,7 @@ class PropertyController extends Controller
     {
         // Logic for agents to view assigned approved properties
         $properties = Property::where('agent_id', auth()->id())
-            ->approved() // Only show approved properties
+            ->where('registration_status', self::REGISTRATION_APPROVED) // Only show approved properties
             ->withCount('units')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -265,7 +293,7 @@ class PropertyController extends Controller
     public function agentShow(Property $property)
     {
         // Ensure the property is assigned to the authenticated agent and approved
-        if ($property->agent_id !== auth()->id() || !$property->is_approved) {
+        if ($property->agent_id !== auth()->id() || $property->registration_status !== self::REGISTRATION_APPROVED) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -277,8 +305,8 @@ class PropertyController extends Controller
     // Additional methods for buyers (if needed)
     public function buyerIndex(Request $request)
     {
-        $query = Property::approved() // Only show approved properties
-            ->where('status', Property::STATUS_ACTIVE);
+        $query = Property::where('registration_status', self::REGISTRATION_APPROVED) // Only show approved properties
+            ->where('availability_status', self::STATUS_ACTIVE);
 
         // Add search filters
         if ($request->filled('search')) {
@@ -307,12 +335,44 @@ class PropertyController extends Controller
     public function buyerShow(Property $property)
     {
         // Only show approved and active properties to buyers
-        if (!$property->is_approved || $property->status !== Property::STATUS_ACTIVE) {
+        if ($property->registration_status !== self::REGISTRATION_APPROVED || $property->availability_status !== self::STATUS_ACTIVE) {
             abort(404, 'Property not available.');
         }
 
         $property->load(['units', 'owner']);
         
         return view('buyer.properties.show', compact('property'));
+    }
+
+    /**
+     * Scope query to get approved properties
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('registration_status', self::REGISTRATION_APPROVED);
+    }
+
+    /**
+     * Scope query to get pending properties
+     */
+    public function scopePending($query)
+    {
+        return $query->where('registration_status', self::REGISTRATION_PENDING);
+    }
+
+    /**
+     * Scope query to get rejected properties
+     */
+    public function scopeRejected($query)
+    {
+        return $query->where('registration_status', self::REGISTRATION_REJECTED);
+    }
+
+    /**
+     * Check if property is approved
+     */
+    public function getIsApprovedAttribute()
+    {
+        return $this->registration_status === self::REGISTRATION_APPROVED;
     }
 }

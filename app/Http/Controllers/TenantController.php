@@ -10,9 +10,80 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Models\Lease;
 use App\Models\Payment;
+use App\Models\MaintenanceRequest;
 
 class TenantController extends Controller
 {
+    public function tenantHomepage()
+    {
+        $user = Auth::user();
+
+        // Ensure user has Tenant role
+        if (!$user->roles->contains('name', 'Tenant')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $tenant = Tenant::where('user_id', $user->id)->first();
+
+        if (!$tenant) {
+            // Create tenant record if it doesn't exist
+            $tenant = Tenant::create([
+                'user_id' => $user->id,
+                'emergency_contact' => null,
+                'is_screened' => false,
+                'move_in_date' => null,
+                'move_out_date' => null,
+            ]);
+        }
+
+        // Tenant statistics
+        $stats = [
+            'active_leases' => Lease::where('tenant_id', $tenant->id)->where('end_date', '>=', now())->count(),
+            'total_leases' => Lease::where('tenant_id', $tenant->id)->count(),
+            'pending_payments' => Payment::where('tenant_id', $tenant->id)->where('status', 'pending')->count(),
+            'total_paid' => Payment::where('tenant_id', $tenant->id)->where('status', 'paid')->sum('amount'),
+            'maintenance_requests' => MaintenanceRequest::where('tenant_id', $tenant->id)->count(),
+            'open_maintenance' => MaintenanceRequest::where('tenant_id', $tenant->id)->where('status', 'open')->count(),
+        ];
+
+        // Current lease
+        $currentLease = Lease::where('tenant_id', $tenant->id)
+            ->where('end_date', '>=', now())
+            ->with('unit.property')
+            ->first();
+
+        // Recent payments
+        $recentPayments = Payment::where('tenant_id', $tenant->id)
+            ->with('lease.unit.property')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Upcoming payments
+        $upcomingPayments = Payment::where('tenant_id', $tenant->id)
+            ->where('due_date', '>=', now())
+            ->where('status', 'pending')
+            ->with('lease.unit.property')
+            ->orderBy('due_date', 'asc')
+            ->take(5)
+            ->get();
+
+        // Recent maintenance requests
+        $recentMaintenance = MaintenanceRequest::where('tenant_id', $tenant->id)
+            ->with('unit.property')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('tenant.homepage', compact(
+            'stats',
+            'currentLease',
+            'recentPayments',
+            'upcomingPayments',
+            'recentMaintenance'
+        ));
+    }
+
     /**
      * Display a listing of the landlord's tenants.
      *
@@ -242,6 +313,7 @@ class TenantController extends Controller
         return response()->json($units);
     }
 
+
     /**
      * Search and filter tenants
      */
@@ -283,7 +355,7 @@ class TenantController extends Controller
         }
 
         $tenants = $query->paginate(15);
-        
+
         return response()->json([
             'html' => view('landlord.tenants.partials.tenant-table', compact('tenants'))->render(),
             'pagination' => $tenants->links()->render()
