@@ -13,7 +13,7 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="mt-6 space-y-6">
         @csrf
         @method('patch')
 
@@ -46,6 +46,55 @@
                 </div>
             @endif
         </div>
+
+        <div>
+            <x-input-label for="profile_photo" :value="__('Profile Photo')" />
+            <input id="profile_photo" name="profile_photo" type="file" class="mt-1 block w-full" accept="image/*" />
+            <x-input-error class="mt-2" :messages="$errors->get('profile_photo')" />
+            @if($user->profile_photo)
+                <img src="{{ asset('storage/' . $user->profile_photo) }}" alt="Profile Photo" class="mt-2 w-20 h-20 rounded-full">
+            @endif
+        </div>
+
+        @if($user->hasRole('Tenant'))
+            <div>
+                <x-input-label for="phone" :value="__('Phone')" />
+                <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $user->phone)" required autocomplete="phone" />
+                <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+            </div>
+
+            <div>
+                <x-input-label for="documents" :value="__('Documents')" />
+                <input id="documents" name="documents" type="file" class="mt-1 block w-full" accept=".pdf,.jpg,.jpeg,.png" />
+                <x-input-error class="mt-2" :messages="$errors->get('documents')" />
+                <p class="text-sm text-gray-600 mt-1">Upload your identification document (PDF, JPG, PNG)</p>
+            </div>
+        @else
+
+            <div>
+                <x-input-label for="bio" :value="__('Bio')" />
+                <textarea id="bio" name="bio" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="4">{{ old('bio', $user->bio) }}</textarea>
+                <x-input-error class="mt-2" :messages="$errors->get('bio')" />
+            </div>
+
+            <div class="flex items-center">
+                <input id="phone_verified" name="phone_verified" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ old('phone_verified', $user->phone_verified) ? 'checked' : '' }}>
+                <label for="phone_verified" class="ml-2 text-sm text-gray-900">{{ __('Phone Verified') }}</label>
+                <x-input-error class="mt-2" :messages="$errors->get('phone_verified')" />
+            </div>
+
+            <div class="flex items-center">
+                <input id="documents_verified" name="documents_verified" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ old('documents_verified', $user->documents_verified) ? 'checked' : '' }}>
+                <label for="documents_verified" class="ml-2 text-sm text-gray-900">{{ __('Documents Verified') }}</label>
+                <x-input-error class="mt-2" :messages="$errors->get('documents_verified')" />
+            </div>
+
+            <div class="flex items-center">
+                <input id="screening_verified" name="screening_verified" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ old('screening_verified', $user->screening_verified) ? 'checked' : '' }}>
+                <label for="screening_verified" class="ml-2 text-sm text-gray-900">{{ __('Screening Verified') }}</label>
+                <x-input-error class="mt-2" :messages="$errors->get('screening_verified')" />
+            </div>
+        @endif
 
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>

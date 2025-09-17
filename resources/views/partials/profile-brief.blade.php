@@ -6,7 +6,7 @@
     <p class="text-sm mb-4">{{ $profileCompletion }}% completed</p>
 
     <ul class="text-sm space-y-2">
-        @if(!$profile->photo)
+        @if(!$profile->profile_photo)
             <li>Upload your profile photo</li>
         @endif
         @if(!$profile->phone_verified)
@@ -17,6 +17,9 @@
         @endif
         @if(!$profile->documents_verified)
             <li>Upload verification documents</li>
+        @endif
+        @if(!$profile->screening_verified)
+            <li>Complete tenant screening</li>
         @endif
     </ul>
 

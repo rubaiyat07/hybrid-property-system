@@ -3,7 +3,21 @@
     <div class="logo">
         <h2 class="text-2xl font-extrabold bg-gradient-to-r from-indigo-400 to-purple-600 
                    bg-clip-text text-transparent">
-            <a href="{{ route('landlord.homepage') }}">HybridEstate</a>
+            @if(auth()->check())
+                @if(auth()->user()->hasRole('Landlord'))
+                    <a href="{{ route('landlord.homepage') }}">HybridEstate</a>
+                @elseif(auth()->user()->hasRole('Agent'))
+                    <a href="{{ route('agent.homepage') }}">HybridEstate</a>
+                @elseif(auth()->user()->hasRole('Tenant'))
+                    <a href="{{ route('tenant.homepage') }}">HybridEstate</a>
+                @elseif(auth()->user()->hasRole('Buyer'))
+                    <a href="{{ url('/') }}">HybridEstate</a>
+                @else
+                    <a href="{{ url('/') }}">HybridEstate</a>
+                @endif
+            @else
+                <a href="{{ url('/') }}">HybridEstate</a>
+            @endif
         </h2>
     </div>
 
@@ -20,13 +34,14 @@
             <a href="{{ route('landlord.homepage') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Home</a>
             <a href="{{ route('landlord.property.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">My Properties</a>
             <a href="{{ route('landlord.tenants.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Tenants</a>
-            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Leases</a>
+            <a href="{{ route('landlord.leases.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Leases</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Payments</a>
         @endrole
 
         {{-- Agent --}}
         @role('Agent')
-            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Property Listings</a>
+            <a href="{{ route('agent.homepage') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Home</a>
+            <a href="{{ route('agent.properties.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Property Listings</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Clients</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Leads</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Deals</a>
@@ -34,6 +49,7 @@
 
         {{-- Tenant --}}
         @role('Tenant')
+            <a href="{{ route('tenant.homepage') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Home</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Find Rentals</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">My Lease</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Payments</a>
