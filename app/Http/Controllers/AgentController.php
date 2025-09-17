@@ -70,12 +70,23 @@ class AgentController extends Controller
             (object) ['image_url' => '/images/ad3.jpg'],
         ];
 
+        // Profile completion calculation
+        $profile = $user;
+        $profileCompletion = 0;
+        if ($user->profile_photo) $profileCompletion += 20;
+        if ($user->phone_verified) $profileCompletion += 20;
+        if ($user->bio) $profileCompletion += 20;
+        if ($user->documents_verified) $profileCompletion += 20;
+        if ($user->screening_verified) $profileCompletion += 20;
+
         return view('agent.homepage', compact(
             'stats',
             'recentLeads',
             'recentTransactions',
             'assignedProperties',
-            'ads'
+            'ads',
+            'profile',
+            'profileCompletion'
         ));
     }
 

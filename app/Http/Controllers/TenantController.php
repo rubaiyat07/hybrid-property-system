@@ -19,7 +19,7 @@ class TenantController extends Controller
         $user = Auth::user();
 
         // Ensure user has Tenant role
-        if (!$user->roles->contains('name', 'Tenant')) {
+        if (!$user->hasRole('Tenant')) {
             abort(403, 'Unauthorized');
         }
 
@@ -75,29 +75,153 @@ class TenantController extends Controller
             ->take(5)
             ->get();
 
+        // Profile completion calculation
+        $profile = $user;
+        $profileCompletion = 0;
+        if ($user->profile_photo) $profileCompletion += 20;
+        if ($user->phone_verified) $profileCompletion += 20;
+        if ($user->bio) $profileCompletion += 20;
+        if ($user->documents_verified) $profileCompletion += 20;
+        if ($user->screening_verified) $profileCompletion += 20;
+
         return view('tenant.homepage', compact(
             'stats',
             'currentLease',
             'recentPayments',
             'upcomingPayments',
-            'recentMaintenance'
+            'recentMaintenance',
+            'profile',
+            'profileCompletion'
         ));
     }
 
+    public function screeningStatus()
+    {
+        $user = Auth::user();
+
+        if (!$user->hasRole('Tenant')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $tenant = $user->tenant;
+
+        $screenings = $tenant ? $tenant->screenings()->get() : collect();
+
+        return view('tenant.screening.status', compact('screenings'));
+    }
+
+    public function applications()
+    {
+        $user = Auth::user();
+
+        if (!$user->hasRole('Tenant')) {
+            abort(403, 'Unauthorized');
+        }
+
+        // For now, return empty applications - Application model not implemented yet
+        $applications = collect();
+
+        return view('tenant.applications.index', compact('applications'));
+    }
+
+    public function submitApplication(Request $request, $propertyId)
+    {
+        $user = Auth::user();
+
+        if (!method_exists($user, 'hasRole') || !$user->hasRole('Tenant')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $tenant = $user->tenant;
+
+        if (!$tenant || !$user->screening_verified) {
+            return redirect()->back()->withErrors(['screening' => 'You must be a verified tenant to submit an application.']);
+        }
+
+        // Validate application data
+        $request->validate([
+            'message' => 'nullable|string|max:1000',
+        ]);
+
+        // For now, just return success - Application model not implemented yet
+        // TODO: Implement Application model and logic
+
+        return redirect()->route('tenant.applications.index')->with('success', 'Application submitted successfully.');
+    }
+
+    public function storeScreeningDocuments(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user->hasRole('Tenant')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $tenant = $user->tenant;
+
+        if (!$tenant) {
+            return redirect()->back()->withErrors(['error' => 'Tenant profile not found.']);
+        }
+
+        // Validate the uploaded files
+        $request->validate([
+            'id_document' => 'required|file|mimes:jpeg,png,jpg,gif,pdf|max:5120', // 5MB
+            'income_proof' => 'required|file|mimes:jpeg,png,jpg,gif,pdf|max:5120',
+            'references' => 'required|file|mimes:jpeg,png,jpg,gif,pdf|max:5120',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $documents = [
+            'id_document' => 'Government ID',
+            'income_proof' => 'Proof of Income',
+            'references' => 'Rental References',
+        ];
+
+        foreach ($documents as $field => $type) {
+            if ($request->hasFile($field)) {
+                $file = $request->file($field);
+                $fileName = time() . '_' . $field . '_' . $user->id . '.' . $file->getClientOriginalExtension();
+                $filePath = $file->storeAs('tenant_screenings', $fileName, 'public');
+
+                // Create screening record
+                \App\Models\TenantScreening::create([
+                    'tenant_id' => $tenant->id,
+                    'document_type' => $type,
+                    'file_path' => $filePath,
+                    'status' => 'pending',
+                    'notes' => $request->input('notes'),
+                ]);
+            }
+        }
+
+        return redirect()->route('tenant.screening.status')->with('success', 'Screening documents submitted successfully. You will be notified once they are reviewed.');
+    }
+
+    public function screeningSubmitForm()
+    {
+        $user = Auth::user();
+
+        if (!$user->hasRole('Tenant')) {
+            abort(403, 'Unauthorized');
+        }
+
+        return view('tenant.screening.submit');
+    }
+
     /**
-     * Display a listing of the landlord's tenants.
+     * Display a listing of tenants.
+     * For Admin: shows all tenants
+     * For Landlord: shows tenants of their properties
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
     {
         $user = Auth::user();
-        
-        // Get all tenants associated with landlord's properties
-        $tenants = Tenant::whereHas('leases.unit.property', function($query) use ($user) {
-                $query->where('owner_id', $user->id);
-            })
-            ->with([
+
+        if ($user->hasRole('Admin')) {
+            // Admin view: all tenants
+            $tenants = Tenant::with([
                 'user',
                 'leases.unit.property',
                 'payments' => function($query) {
@@ -105,35 +229,62 @@ class TenantController extends Controller
                 }
             ])
             ->paginate(15);
-        
-        // Statistics for the landlord's tenants
-        $stats = [
-            'total_tenants' => Tenant::whereHas('leases.unit.property', function($query) use ($user) {
-                $query->where('owner_id', $user->id);
-            })->count(),
-            
-            'active_leases' => Lease::whereHas('unit.property', function($query) use ($user) {
-                $query->where('owner_id', $user->id);
-            })->where('end_date', '>=', now())->count(),
-            
-            'pending_screening' => Tenant::whereHas('leases.unit.property', function($query) use ($user) {
-                $query->where('owner_id', $user->id);
-            })->where('is_screened', false)->count(),
-            
-            'overdue_payments' => Payment::whereHas('lease.unit.property', function($query) use ($user) {
-                $query->where('owner_id', $user->id);
-            })
-            ->where('status', 'pending')
-            ->where('due_date', '<', now())
-            ->count(),
-        ];
-        
-        // Get landlord's properties for filters
-        $properties = Property::where('owner_id', $user->id)
-            ->select('id', 'address')
-            ->get();
-        
-        return view('landlord.tenants.index', compact('tenants', 'stats', 'properties'));
+
+            // Statistics for all tenants
+            $stats = [
+                'total_tenants' => Tenant::count(),
+                'active_leases' => Lease::where('end_date', '>=', now())->count(),
+                'pending_screening' => Tenant::where('is_screened', false)->count(),
+                'overdue_payments' => Payment::where('status', 'pending')
+                    ->where('due_date', '<', now())
+                    ->count(),
+            ];
+
+            return view('admin.tenants.index', compact('tenants', 'stats'));
+        } else {
+            // Landlord view: tenants of their properties
+            // Get all tenants associated with landlord's properties
+            $tenants = Tenant::whereHas('leases.unit.property', function($query) use ($user) {
+                    $query->where('owner_id', $user->id);
+                })
+                ->with([
+                    'user',
+                    'leases.unit.property',
+                    'payments' => function($query) {
+                        $query->latest();
+                    }
+                ])
+                ->paginate(15);
+
+            // Statistics for the landlord's tenants
+            $stats = [
+                'total_tenants' => Tenant::whereHas('leases.unit.property', function($query) use ($user) {
+                    $query->where('owner_id', $user->id);
+                })->count(),
+
+                'active_leases' => Lease::whereHas('unit.property', function($query) use ($user) {
+                    $query->where('owner_id', $user->id);
+                })->where('end_date', '>=', now())->count(),
+
+                'pending_screening' => Tenant::whereHas('leases.unit.property', function($query) use ($user) {
+                    $query->where('owner_id', $user->id);
+                })->where('is_screened', false)->count(),
+
+                'overdue_payments' => Payment::whereHas('lease.unit.property', function($query) use ($user) {
+                    $query->where('owner_id', $user->id);
+                })
+                ->where('status', 'pending')
+                ->where('due_date', '<', now())
+                ->count(),
+            ];
+
+            // Get landlord's properties for filters
+            $properties = Property::where('owner_id', $user->id)
+                ->select('id', 'address')
+                ->get();
+
+            return view('landlord.tenants.index', compact('tenants', 'stats', 'properties'));
+        }
     }
 
     /**
@@ -145,7 +296,7 @@ class TenantController extends Controller
     {
         $user = Auth::user();
         $properties = Property::where('owner_id', $user->id)->get();
-        
+
         return view('landlord.tenants.create', compact('properties'));
     }
 
@@ -167,7 +318,7 @@ class TenantController extends Controller
         // Check if user already has a tenant record
         $user = User::where('email', $request->email)->first();
         $tenant = Tenant::where('user_id', $user->id)->first();
-        
+
         if (!$tenant) {
             $tenant = Tenant::create([
                 'user_id' => $user->id,
@@ -193,7 +344,7 @@ class TenantController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        
+
         $tenant = Tenant::whereHas('leases.unit.property', function($query) use ($user) {
                 $query->where('owner_id', $user->id);
             })
@@ -205,7 +356,7 @@ class TenantController extends Controller
                 'screenings'
             ])
             ->findOrFail($id);
-            
+
         return view('landlord.tenants.show', compact('tenant'));
     }
 
@@ -218,15 +369,15 @@ class TenantController extends Controller
     public function edit($id)
     {
         $user = Auth::user();
-        
+
         $tenant = Tenant::whereHas('leases.unit.property', function($query) use ($user) {
                 $query->where('owner_id', $user->id);
             })
             ->with('user', 'leases.unit.property')
             ->findOrFail($id);
-            
+
         $properties = Property::where('owner_id', $user->id)->get();
-        
+
         return view('landlord.tenants.edit', compact('tenant', 'properties'));
     }
 
@@ -240,7 +391,7 @@ class TenantController extends Controller
     public function update(Request $request, $id)
     {
         $user = Auth::user();
-        
+
         $tenant = Tenant::whereHas('leases.unit.property', function($query) use ($user) {
                 $query->where('owner_id', $user->id);
             })
@@ -271,7 +422,7 @@ class TenantController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
-        
+
         $tenant = Tenant::whereHas('leases.unit.property', function($query) use ($user) {
                 $query->where('owner_id', $user->id);
             })
@@ -279,7 +430,7 @@ class TenantController extends Controller
 
         // Check if tenant has active leases
         $activeLeases = $tenant->leases()->where('end_date', '>=', now())->count();
-        
+
         if ($activeLeases > 0) {
             return response()->json([
                 'success' => false,
@@ -301,7 +452,7 @@ class TenantController extends Controller
     public function getUnits($propertyId)
     {
         $user = Auth::user();
-        
+
         $units = Unit::whereHas('property', function($query) use ($user) {
                 $query->where('owner_id', $user->id);
             })
@@ -309,7 +460,7 @@ class TenantController extends Controller
             ->where('status', 'vacant')
             ->select('id', 'unit_number', 'rent_amount')
             ->get();
-            
+
         return response()->json($units);
     }
 
@@ -361,4 +512,6 @@ class TenantController extends Controller
             'pagination' => $tenants->links()->render()
         ]);
     }
+
+
 }

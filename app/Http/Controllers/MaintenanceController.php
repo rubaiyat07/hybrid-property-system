@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\MaintenanceRequest;
 
 class MaintenanceController extends Controller
 {
@@ -14,6 +15,29 @@ class MaintenanceController extends Controller
     public function index()
     {
         //
+    }
+
+    /**
+     * Display admin listing of maintenance requests.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function adminIndex()
+    {
+        $maintenanceRequests = MaintenanceRequest::with(['tenant', 'property', 'unit'])->paginate(15);
+        return view('admin.maintenance_requests.index', compact('maintenanceRequests'));
+    }
+
+    /**
+     * Display admin view of a specific maintenance request.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function adminShow($id)
+    {
+        $maintenanceRequest = MaintenanceRequest::with(['tenant', 'property', 'unit'])->findOrFail($id);
+        return view('admin.maintenance_requests.show', compact('maintenanceRequest'));
     }
 
     /**

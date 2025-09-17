@@ -83,14 +83,23 @@ class LandlordController extends Controller
         ->take(10)
         ->get();
 
-    // Active Rentals (Other landlords)
+        // Active Rentals (Other landlords)
     $activeRentals = Lease::whereHas('unit.property', fn($q) => $q->where('owner_id', '!=', $user->id))
         ->with(['unit.property', 'tenant'])
         ->where('end_date', '>=', now())
         ->latest()
         ->take(10)
         ->get();
-        
+
+        // Profile completion calculation
+        $profile = $user;
+        $profileCompletion = 0;
+        if ($user->profile_photo) $profileCompletion += 20;
+        if ($user->phone_verified) $profileCompletion += 20;
+        if ($user->bio) $profileCompletion += 20;
+        if ($user->documents_verified) $profileCompletion += 20;
+        if ($user->screening_verified) $profileCompletion += 20;
+
         return view('landlord.homepage', compact(
             'stats',
             'recentPayments',
@@ -98,7 +107,9 @@ class LandlordController extends Controller
             'properties',
             'ads',
             'activeListings',
-            'activeRentals'   
+            'activeRentals',
+            'profile',
+            'profileCompletion'
         ));
     }
 }

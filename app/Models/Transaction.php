@@ -14,6 +14,7 @@ class Transaction extends Model
         'buyer_id',
         'agent_id',
         'amount',
+        'commission_amount',
         'payment_status',
         'agreement_path',
         'payment_milestones',

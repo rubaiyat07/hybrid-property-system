@@ -11,6 +11,7 @@ class Property extends Model
 
     protected $fillable = [
         'owner_id',
+        'agent_id',
         'name',
         'address',
         'city',
@@ -45,6 +46,11 @@ class Property extends Model
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function agent()
+    {
+        return $this->belongsTo(User::class, 'agent_id');
     }
 
     public function approver()

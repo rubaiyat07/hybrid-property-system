@@ -96,7 +96,20 @@ class PropertyController extends Controller
         $property->zip_code = $request->zip_code;
         $property->description = $request->description;
         $property->price_or_rent = $request->price_or_rent ?? 0;
-        $property->owner_id = auth()->id();
+
+        $user = auth()->user();
+        if ($user->hasRole('Agent')) {
+            $property->agent_id = $user->id;
+            $property->owner_id = null; // Owner to be assigned later or by admin
+            $redirectRoute = 'agent.properties.index';
+            $successMessage = 'Property registration submitted successfully. It will be reviewed by admin.';
+        } else {
+            $property->owner_id = $user->id;
+            $property->agent_id = null; // Agent can be assigned later
+            $redirectRoute = 'landlord.property.index';
+            $successMessage = 'Property registration submitted successfully. It will be reviewed by admin.';
+        }
+
         $property->status = 'rent'; // Default to 'rent' or 'sale' as per your choice
         $property->availability_status = self::STATUS_INACTIVE; // Inactive until approved
         $property->registration_status = self::REGISTRATION_PENDING; // Pending approval
@@ -109,8 +122,8 @@ class PropertyController extends Controller
 
         $property->save();
 
-        return redirect()->route('landlord.property.index')
-            ->with('success', 'Property registration submitted successfully. It will be reviewed by admin.');
+        return redirect()->route($redirectRoute)
+            ->with('success', $successMessage);
     }
 
     /**
@@ -344,35 +357,5 @@ class PropertyController extends Controller
         return view('buyer.properties.show', compact('property'));
     }
 
-    /**
-     * Scope query to get approved properties
-     */
-    public function scopeApproved($query)
-    {
-        return $query->where('registration_status', self::REGISTRATION_APPROVED);
-    }
 
-    /**
-     * Scope query to get pending properties
-     */
-    public function scopePending($query)
-    {
-        return $query->where('registration_status', self::REGISTRATION_PENDING);
-    }
-
-    /**
-     * Scope query to get rejected properties
-     */
-    public function scopeRejected($query)
-    {
-        return $query->where('registration_status', self::REGISTRATION_REJECTED);
-    }
-
-    /**
-     * Check if property is approved
-     */
-    public function getIsApprovedAttribute()
-    {
-        return $this->registration_status === self::REGISTRATION_APPROVED;
-    }
 }
