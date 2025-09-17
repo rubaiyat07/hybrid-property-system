@@ -18,8 +18,7 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-            RoleSeeder::class, // ✅ Run roles first
-            UserSeeder::class, // ✅ Run users next
+            AllTablesSeeder::class, // Run all seeders
         ]);
 
     }
