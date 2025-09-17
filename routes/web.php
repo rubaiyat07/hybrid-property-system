@@ -113,6 +113,21 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/income', [AdminController::class, 'incomeReport'])->name('reports.income');
         Route::get('/reports/occupancy', [AdminController::class, 'occupancyReport'])->name('reports.occupancy');
         
+        // Tenant Screening Management
+        Route::get('/screenings', [AdminController::class, 'screenings'])->name('screenings.index');
+        Route::get('/screenings/{screening}', [AdminController::class, 'showScreening'])->name('screenings.show');
+        Route::post('/screenings/{screening}/approve', [AdminController::class, 'approveScreening'])->name('screenings.approve');
+        Route::post('/screenings/{screening}/reject', [AdminController::class, 'rejectScreening'])->name('screenings.reject');
+
+        // Agent Management
+        Route::get('/agents', [\App\Http\Controllers\UserController::class, 'agents'])->name('agents.index');
+        Route::get('/agents/{agent}', [\App\Http\Controllers\UserController::class, 'showAgent'])->name('agents.show');
+
+        // Maintenance Requests Management
+        Route::get('/maintenance-requests', [\App\Http\Controllers\MaintenanceController::class, 'adminIndex'])->name('maintenance_requests.index');
+        Route::get('/maintenance-requests/{request}', [\App\Http\Controllers\MaintenanceController::class, 'adminShow'])->name('maintenance_requests.show');
+        Route::put('/maintenance-requests/{request}', [\App\Http\Controllers\MaintenanceController::class, 'adminUpdate'])->name('maintenance_requests.update');
+
         // Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
         Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
@@ -166,14 +181,16 @@ Route::middleware(['auth'])->group(function () {
         // Dashboard
         Route::get('/homepage', [\App\Http\Controllers\AgentController::class, 'agentHomepage'])->name('homepage');
         Route::get('/dashboard', [\App\Http\Controllers\AgentController::class, 'agentDashboard'])->name('dashboard');
-        
-        // Assigned Approved Properties
+
+        // Property Registration and Management
         Route::get('/properties', [PropertyController::class, 'agentIndex'])->name('properties.index');
+        Route::get('/properties/create', [PropertyController::class, 'create'])->name('properties.create');
+        Route::post('/properties', [PropertyController::class, 'store'])->name('properties.store');
         Route::get('/properties/{property}', [PropertyController::class, 'agentShow'])->name('properties.show');
-        
+
         // Leads (agent manages potential buyers/tenants)
         Route::resource('leads', \App\Http\Controllers\LeadController::class)->except(['destroy']);
-        
+
         // Transactions (sales/rental transactions handled by agent)
         Route::resource('transactions', \App\Http\Controllers\TransactionController::class)->only(['index', 'show', 'create', 'store']);
     });
@@ -213,6 +230,8 @@ Route::middleware(['auth'])->group(function () {
         
         // Tenant Screening & Applications
         Route::get('/screening/status', [TenantController::class, 'screeningStatus'])->name('screening.status');
+        Route::get('/screening/submit', [TenantController::class, 'screeningSubmitForm'])->name('screening.submit');
+        Route::post('/screening/store', [TenantController::class, 'storeScreeningDocuments'])->name('screening.store');
         Route::get('/applications', [TenantController::class, 'applications'])->name('applications.index');
         Route::post('/applications/{property}', [TenantController::class, 'submitApplication'])->name('applications.submit');
         

@@ -1,0 +1,30 @@
+<div class="bg-white shadow rounded p-4">
+    <h3 class="font-semibold mb-4">Profile Completion</h3>
+    <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+        <div class="bg-indigo-500 h-2 rounded-full" style="width: <?php echo e($profileCompletion); ?>%"></div>
+    </div>
+    <p class="text-sm mb-4"><?php echo e($profileCompletion); ?>% completed</p>
+
+    <ul class="text-sm space-y-2">
+        <?php if(!$profile->profile_photo): ?>
+            <li>Upload your profile photo</li>
+        <?php endif; ?>
+        <?php if(!$profile->phone_verified): ?>
+            <li>Verify your phone number</li>
+        <?php endif; ?>
+        <?php if(!$profile->bio): ?>
+            <li>Add a short bio</li>
+        <?php endif; ?>
+        <?php if(!$profile->documents_verified): ?>
+            <li>Upload verification documents</li>
+        <?php endif; ?>
+        <?php if(!$profile->screening_verified): ?>
+            <li>Complete tenant screening</li>
+        <?php endif; ?>
+    </ul>
+
+    <a href="<?php echo e(route('profile.edit')); ?>" class="mt-4 inline-block text-indigo-600 font-medium hover:underline">
+        Complete your profile
+    </a>
+</div>
+<?php /**PATH C:\xampp\htdocs\Web_Dev\Git_Demo\hybrid-property-system\resources\views/partials/profile-brief.blade.php ENDPATH**/ ?>
