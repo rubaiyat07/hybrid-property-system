@@ -137,27 +137,34 @@
                     </div>
                 @endif
 
-                <!-- Property Image Upload -->
-                <div>
-                    <label for="image" class="block text-sm font-medium text-gray-700 mb-1">
-                        {{ $property->image ? 'Update Property Image' : 'Property Image' }}
+            <!-- Property Image Upload -->
+            <div>
+                <label for="image" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ $property->image ? 'Update Property Image' : 'Property Image' }}
+                </label>
+                <div class="flex items-center justify-center w-full">
+                    <label for="image" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-3"></i>
+                            <p class="mb-2 text-sm text-gray-500">
+                                <span class="font-semibold">Click to {{ $property->image ? 'replace' : 'upload' }}</span> or drag and drop
+                            </p>
+                            <p class="text-xs text-gray-500">PNG, JPG or GIF (MAX. 2MB)</p>
+                        </div>
+                        <input type="file" name="image" id="image" class="hidden" accept="image/*">
                     </label>
-                    <div class="flex items-center justify-center w-full">
-                        <label for="image" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-3"></i>
-                                <p class="mb-2 text-sm text-gray-500">
-                                    <span class="font-semibold">Click to {{ $property->image ? 'replace' : 'upload' }}</span> or drag and drop
-                                </p>
-                                <p class="text-xs text-gray-500">PNG, JPG or GIF (MAX. 2MB)</p>
-                            </div>
-                            <input type="file" name="image" id="image" class="hidden" accept="image/*">
-                        </label>
-                    </div>
-                    @error('image')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
                 </div>
+                @error('image')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Multiple Images Upload Link -->
+            <div class="mt-6">
+                <a href="{{ route('landlord.property.images.index', $property) }}"                   class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium">
+                    <i class="fas fa-images mr-2"></i> Manage Photo Gallery
+                </a>
+            </div>
 
                 <!-- Property Availability Status -->
                 <div>

@@ -136,8 +136,8 @@ class PropertyController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $property->load(['units', 'leases.tenant', 'approver']);
-        
+        $property->load(['units', 'leases.tenant', 'approver', 'images']);
+
         return view('landlord.property.show', compact('property'));
     }
 

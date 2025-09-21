@@ -36,6 +36,7 @@
             <a href="{{ route('landlord.tenants.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Tenants</a>
             <a href="{{ route('landlord.leases.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Leases</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Payments</a>
+            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Billings</a>
         @endrole
 
         {{-- Agent --}}

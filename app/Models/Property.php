@@ -103,6 +103,16 @@ class Property extends Model
         return $this->hasManyThrough(Lease::class, Unit::class);
     }
 
+    public function facilities()
+    {
+        return $this->hasMany(PropertyFacility::class);
+    }
+
+    public function transfers()
+    {
+        return $this->hasMany(PropertyTransfer::class);
+    }
+
     // Scopes
     public function scopePending($query)
     {

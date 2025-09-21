@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminPropertyController as AdminPropertyManagementController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PropertyImageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -141,6 +142,18 @@ Route::middleware(['auth'])->group(function () {
         // Property Registration and Management
         Route::resource('property', PropertyController::class);
         
+        // Property Image Management
+    Route::get('/property/{property}/images', [PropertyImageController::class, 'index'])
+        ->name('property.images.index');
+    Route::post('/property/{property}/images', [PropertyImageController::class, 'store'])
+        ->name('property.images.store');
+    Route::put('/property/{property}/images/{image}/primary', [PropertyImageController::class, 'setPrimary'])
+        ->name('property.images.set-primary');
+    Route::delete('/property/{property}/images/{image}', [PropertyImageController::class, 'destroy'])
+        ->name('property.images.destroy');
+    Route::post('/property/{property}/images/reorder', [PropertyImageController::class, 'reorder'])
+        ->name('property.images.reorder');
+
         // Property Resubmission
         Route::post('property/{property}/resubmit', [PropertyController::class, 'resubmit'])
              ->name('property.resubmit');
