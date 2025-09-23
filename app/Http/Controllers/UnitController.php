@@ -226,7 +226,95 @@ class UnitController extends Controller
         }
 
         $units = $property->units()->select('id', 'unit_number', 'status', 'rent_amount')->get();
-        
+
         return response()->json($units);
+    }
+
+    /**
+     * Publish a unit as a listing
+     */
+    public function publish(Unit $unit)
+    {
+        // Verify ownership and property approval
+        if ($unit->property->owner_id !== auth()->id() || !$unit->property->is_approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($unit->publish()) {
+            return redirect()->back()->with('success', 'Unit published successfully and is now visible to tenants.');
+        } else {
+            return redirect()->back()->with('error', 'Unit cannot be published. Make sure it is vacant and belongs to an approved property.');
+        }
+    }
+
+    /**
+     * Unpublish a unit listing
+     */
+    public function unpublish(Unit $unit)
+    {
+        // Verify ownership and property approval
+        if ($unit->property->owner_id !== auth()->id() || !$unit->property->is_approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $unit->unpublish();
+
+        return redirect()->back()->with('success', 'Unit unpublished successfully and is no longer visible to tenants.');
+    }
+
+    /**
+     * Toggle unit listing status
+     */
+    public function toggleListing(Unit $unit)
+    {
+        // Verify ownership and property approval
+        if ($unit->property->owner_id !== auth()->id() || !$unit->property->is_approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($unit->is_published) {
+            $unit->unpublish();
+            $message = 'Unit unpublished successfully and is no longer visible to tenants.';
+        } else {
+            if ($unit->publish()) {
+                $message = 'Unit published successfully and is now visible to tenants.';
+            } else {
+                $message = 'Unit cannot be published. Make sure it is vacant and belongs to an approved property.';
+            }
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Update unit listing details
+     */
+    public function updateListing(Request $request, Unit $unit)
+    {
+        // Verify ownership and property approval
+        if ($unit->property->owner_id !== auth()->id() || !$unit->property->is_approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'deposit_amount' => 'nullable|numeric|min:0',
+            'photos' => 'nullable|array',
+            'photos.*' => 'string',
+            'description' => 'nullable|string|max:1000',
+            'room_type' => 'nullable|string|max:50',
+            'bedrooms' => 'nullable|integer|min:0',
+            'bathrooms' => 'nullable|integer|min:0',
+        ]);
+
+        $unit->update([
+            'deposit_amount' => $request->deposit_amount,
+            'photos' => $request->photos,
+            'description' => $request->description,
+            'room_type' => $request->room_type,
+            'bedrooms' => $request->bedrooms,
+            'bathrooms' => $request->bathrooms,
+        ]);
+
+        return redirect()->back()->with('success', 'Unit listing details updated successfully.');
     }
 }

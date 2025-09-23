@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'HybridEstate - Admin Dashboard')</title>
 
     <!-- Font Awesome -->
@@ -47,5 +48,8 @@
     <!-- Custom JS -->
     <script src="{{ asset('js/welcome.js') }}"></script>
     <script src="{{ asset('js/dashboard.js') }}"></script>
+
+    <!-- Stack Scripts -->
+    @stack('scripts')
 </body>
 </html>

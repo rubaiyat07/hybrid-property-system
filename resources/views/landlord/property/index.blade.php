@@ -41,8 +41,12 @@
 
 <!-- Properties List -->
 <div class="property-table-container">
-    <div class="property-table-header">
-        <h2>Properties List</h2>
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">Properties List</h2>
+        <a href="{{ route('landlord.property.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+            <i class="fas fa-plus mr-2"></i>
+            Register New Property
+        </a>
     </div>
     
     @if($properties->count() > 0)

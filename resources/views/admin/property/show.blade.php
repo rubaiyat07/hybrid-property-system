@@ -11,7 +11,7 @@
             <p class="text-gray-600 mt-1">{{ $property->name }} - ID: #{{ $property->id }}</p>
         </div>
         <div class="flex space-x-3">
-            <a href="{{ route('admin.property.index') }}" 
+            <a href="{{ route('admin.property.index') }}"
                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium">
                 <i class="fas fa-arrow-left mr-1"></i> Back to List
             </a>
@@ -28,11 +28,11 @@
                         <strong>Pending Review:</strong> This property registration is awaiting your approval.
                     </div>
                     <div class="flex space-x-2">
-                        <button onclick="showApproveModal()" 
+                        <button onclick="showApproveModal()"
                                 class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
                             <i class="fas fa-check mr-1"></i> Approve
                         </button>
-                        <button onclick="showRejectModal()" 
+                        <button onclick="showRejectModal()"
                                 class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">
                             <i class="fas fa-times mr-1"></i> Reject
                         </button>
@@ -51,7 +51,7 @@
                             @endif
                         </div>
                     </div>
-                    <button onclick="resetToPending()" 
+                    <button onclick="resetToPending()"
                             class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
                         <i class="fas fa-undo mr-1"></i> Reset to Pending
                     </button>
@@ -69,7 +69,7 @@
                             @endif
                         </div>
                     </div>
-                    <button onclick="resetToPending()" 
+                    <button onclick="resetToPending()"
                             class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
                         <i class="fas fa-undo mr-1"></i> Reset to Pending
                     </button>
@@ -84,7 +84,7 @@
             <!-- Property Image -->
             @if($property->image)
                 <div class="bg-white shadow rounded-lg overflow-hidden">
-                    <img src="{{ $property->image }}" alt="{{ $property->name }}" 
+                    <img src="{{ $property->image }}" alt="{{ $property->name }}"
                          class="w-full h-64 object-cover">
                     <div class="p-4">
                         <p class="text-sm text-gray-600">Property Image</p>
@@ -136,7 +136,7 @@
                             <dd class="text-sm text-gray-900">{{ $property->updated_at->format('M d, Y \a\t g:i A') }}</dd>
                         </div>
                     </dl>
-                    
+
                     @if($property->description)
                         <div class="mt-6">
                             <dt class="text-sm font-medium text-gray-500 mb-2">Description</dt>
@@ -171,12 +171,12 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center space-x-2">
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                            {{ $document->status === 'approved' ? 'bg-green-100 text-green-800' : 
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                            {{ $document->status === 'approved' ? 'bg-green-100 text-green-800' :
                                                ($document->status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') }}">
                                             {{ ucfirst($document->status) }}
                                         </span>
-                                        <a href="{{ Storage::url($document->file_path) }}" target="_blank" 
+                                        <a href="{{ Storage::url($document->file_path) }}" target="_blank"
                                            class="text-indigo-600 hover:text-indigo-900">
                                             <i class="fas fa-external-link-alt"></i>
                                         </a>
@@ -198,7 +198,7 @@
                     <div class="flex items-center">
                         <div class="flex-shrink-0 h-10 w-10">
                             @if($property->owner->profile_photo)
-                                <img class="h-10 w-10 rounded-full object-cover" 
+                                <img class="h-10 w-10 rounded-full object-cover"
                                      src="{{ $property->owner->profile_photo }}" alt="{{ $property->owner->name }}">
                             @else
                                 <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -229,11 +229,11 @@
                 <div class="bg-white shadow rounded-lg p-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Review Actions</h3>
                     <div class="space-y-3">
-                        <button onclick="showApproveModal()" 
+                        <button onclick="showApproveModal()"
                                 class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
                             <i class="fas fa-check mr-2"></i> Approve Property
                         </button>
-                        <button onclick="showRejectModal()" 
+                        <button onclick="showRejectModal()"
                                 class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium">
                             <i class="fas fa-times mr-2"></i> Reject Property
                         </button>
@@ -254,7 +254,7 @@
                             <p class="text-sm text-gray-500">{{ $property->created_at->format('M d, Y \a\t g:i A') }}</p>
                         </div>
                     </div>
-                    
+
                     @if($property->updated_at != $property->created_at)
                         <div class="flex items-start">
                             <div class="flex-shrink-0 h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -269,7 +269,7 @@
 
                     @if($property->approved_at)
                         <div class="flex items-start">
-                            <div class="flex-shrink-0 h-8 w-8 rounded-full 
+                            <div class="flex-shrink-0 h-8 w-8 rounded-full
                                 {{ $property->registration_status === 'approved' ? 'bg-green-100' : 'bg-red-100' }} flex items-center justify-center">
                                 <i class="fas {{ $property->registration_status === 'approved' ? 'fa-check text-green-600' : 'fa-times text-red-600' }} text-xs"></i>
                             </div>
@@ -309,16 +309,16 @@
                         </p>
                         <div class="mb-4">
                             <label for="approve_notes" class="block text-sm font-medium text-gray-700 mb-2 text-left">Notes (Optional)</label>
-                            <textarea name="notes" id="approve_notes" rows="3" 
+                            <textarea name="notes" id="approve_notes" rows="3"
                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                       placeholder="Add any notes for the property owner..."></textarea>
                         </div>
                         <div class="flex justify-center space-x-3">
-                            <button type="button" onclick="closeApproveModal()" 
+                            <button type="button" onclick="closeApproveModal()"
                                     class="bg-white text-gray-700 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
                                 Cancel
                             </button>
-                            <button type="submit" 
+                            <button type="submit"
                                     class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
                                 Approve Property
                             </button>
@@ -354,11 +354,11 @@
                                       placeholder="Explain why this property is being rejected..."></textarea>
                         </div>
                         <div class="flex justify-center space-x-3">
-                            <button type="button" onclick="closeRejectModal()" 
+                            <button type="button" onclick="closeRejectModal()"
                                     class="bg-white text-gray-700 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
                                 Cancel
                             </button>
-                            <button type="submit" 
+                            <button type="submit"
                                     class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
                                 Reject Property
                             </button>
@@ -378,6 +378,8 @@ function showApproveModal() {
 
 function closeApproveModal() {
     document.getElementById('approveModal').classList.add('hidden');
+    // Clear form when closing
+    document.getElementById('approve_notes').value = '';
 }
 
 function showRejectModal() {
@@ -386,6 +388,8 @@ function showRejectModal() {
 
 function closeRejectModal() {
     document.getElementById('rejectModal').classList.add('hidden');
+    // Clear form when closing
+    document.getElementById('reject_notes').value = '';
 }
 
 function resetToPending() {
@@ -393,18 +397,18 @@ function resetToPending() {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ route("admin.property.reset-pending", $property) }}';
-        
+
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';
         csrfInput.name = '_token';
         csrfInput.value = csrfToken;
-        
+
         const methodInput = document.createElement('input');
         methodInput.type = 'hidden';
         methodInput.name = '_method';
         methodInput.value = 'PUT';
-        
+
         form.appendChild(csrfInput);
         form.appendChild(methodInput);
         document.body.appendChild(form);
@@ -412,14 +416,74 @@ function resetToPending() {
     }
 }
 
-// Close modals when clicking outside
+// Enhanced form validation and submission
+function validateApproveForm() {
+    const notes = document.getElementById('approve_notes').value.trim();
+    return true; // Notes are optional for approval
+}
+
+function validateRejectForm() {
+    const notes = document.getElementById('reject_notes').value.trim();
+    if (!notes) {
+        alert('Please provide a reason for rejecting this property.');
+        return false;
+    }
+    if (notes.length < 10) {
+        alert('Please provide a more detailed reason for rejection (at least 10 characters).');
+        return false;
+    }
+    return true;
+}
+
+// Add loading states to forms
 document.addEventListener('DOMContentLoaded', function() {
+    // Close modals when clicking outside
     document.querySelectorAll('[id$="Modal"]').forEach(modal => {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
                 this.classList.add('hidden');
             }
         });
+    });
+
+    // Add form submission handlers
+    const approveForm = document.querySelector('form[action*="approve"]');
+    const rejectForm = document.querySelector('form[action*="reject"]');
+
+    if (approveForm) {
+        approveForm.addEventListener('submit', function(e) {
+            if (!validateApproveForm()) {
+                e.preventDefault();
+                return false;
+            }
+            // Add loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Processing...';
+            submitBtn.disabled = true;
+        });
+    }
+
+    if (rejectForm) {
+        rejectForm.addEventListener('submit', function(e) {
+            if (!validateRejectForm()) {
+                e.preventDefault();
+                return false;
+            }
+            // Add loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Processing...';
+            submitBtn.disabled = true;
+        });
+    }
+
+    // Add keyboard support (ESC to close modals)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('approveModal').classList.add('hidden');
+            document.getElementById('rejectModal').classList.add('hidden');
+        }
     });
 });
 </script>

@@ -12,6 +12,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminPropertyController as AdminPropertyManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PropertyImageController;
+use App\Http\Controllers\PublicListingController;
+use App\Http\Controllers\TenantInquiryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -105,6 +107,12 @@ Route::middleware(['auth'])->group(function () {
         
         // Lease Management
         Route::resource('leases', LeaseController::class);
+
+        // Additional Lease Routes
+        Route::post('leases/{lease}/renew', [LeaseController::class, 'renew'])->name('leases.renew');
+        Route::post('leases/{lease}/terminate', [LeaseController::class, 'terminate'])->name('leases.terminate');
+        Route::post('leases/{lease}/upload-document', [LeaseController::class, 'uploadDocument'])->name('leases.upload-document');
+        Route::get('leases/{lease}/download-document', [LeaseController::class, 'downloadDocument'])->name('leases.download-document');
         
         // Payment Management
         Route::resource('payments', PaymentController::class);
@@ -183,7 +191,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/tenants/{tenant}/message', [TenantController::class, 'sendMessage'])->name('tenants.send-message');
         
         // Leases (landlord creates leases for tenants)
-        Route::resource('leases', LeaseController::class)->only(['index', 'show', 'create', 'store']);
+        Route::resource('leases', LeaseController::class)->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
+
+        // Additional Lease Routes for Landlord
+        Route::post('leases/{lease}/renew', [LeaseController::class, 'renew'])->name('leases.renew');
+        Route::post('leases/{lease}/terminate', [LeaseController::class, 'terminate'])->name('leases.terminate');
+        Route::post('leases/{lease}/upload-document', [LeaseController::class, 'uploadDocument'])->name('leases.upload-document');
+        Route::get('leases/{lease}/download-document', [LeaseController::class, 'downloadDocument'])->name('leases.download-document');
         
         // Payments (landlord can view payments received)
         Route::resource('payments', PaymentController::class)->only(['index', 'show']);
@@ -289,5 +303,36 @@ Route::middleware(['auth'])->group(function () {
 // Public property listings (no authentication required) - show only approved properties
 Route::get('/public-properties', [PropertyController::class, 'buyerIndex'])->name('public.properties.index');
 Route::get('/public-properties/{property}', [PropertyController::class, 'buyerShow'])->name('public.properties.show');
+
+// Public rental listings (no authentication required)
+Route::prefix('rentals')->name('rentals.')->group(function () {
+    Route::get('/', [PublicListingController::class, 'index'])->name('index');
+    Route::get('/{unit}', [PublicListingController::class, 'show'])->name('show');
+    Route::get('/search/ajax', [PublicListingController::class, 'search'])->name('search.ajax');
+    Route::get('/filters/options', [PublicListingController::class, 'getFilterOptions'])->name('filters.options');
+});
+
+// Tenant inquiry routes (no authentication required for form submission)
+Route::prefix('inquiry')->name('inquiry.')->group(function () {
+    Route::get('/unit/{unit}', [TenantInquiryController::class, 'create'])->name('create');
+    Route::post('/unit/{unit}', [TenantInquiryController::class, 'store'])->name('store');
+});
+
+// Landlord inquiry management routes (authenticated)
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('landlord')->name('landlord.')->middleware(['role:Landlord'])->group(function () {
+        // Unit listing management
+        Route::post('units/{unit}/publish', [UnitController::class, 'publish'])->name('units.publish');
+        Route::post('units/{unit}/unpublish', [UnitController::class, 'unpublish'])->name('units.unpublish');
+        Route::post('units/{unit}/toggle-listing', [UnitController::class, 'toggleListing'])->name('units.toggle-listing');
+        Route::put('units/{unit}/update-listing', [UnitController::class, 'updateListing'])->name('units.update-listing');
+
+        // Inquiry management
+        Route::get('/inquiries', [TenantInquiryController::class, 'index'])->name('inquiries.index');
+        Route::get('/inquiries/{inquiry}', [TenantInquiryController::class, 'show'])->name('inquiries.show');
+        Route::post('/inquiries/{inquiry}/respond', [TenantInquiryController::class, 'respond'])->name('inquiries.respond');
+        Route::post('/inquiries/{inquiry}/close', [TenantInquiryController::class, 'close'])->name('inquiries.close');
+    });
+});
 
 require __DIR__.'/auth.php';
