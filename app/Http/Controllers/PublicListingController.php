@@ -98,7 +98,7 @@ class PublicListingController extends Controller
             ->distinct()
             ->pluck('room_type');
 
-        return view('public_pages.rentals.index', compact(
+        return view('public_pages.rentals', compact(
             'units',
             'cities',
             'propertyTypes',
@@ -136,7 +136,7 @@ class PublicListingController extends Controller
             ->limit(3)
             ->get();
 
-        return view('public_pages.rentals.show', compact('unit', 'similarUnits'));
+        return view('public_pages.unit-detail', compact('unit', 'similarUnits'));
     }
 
     /**
@@ -305,9 +305,23 @@ class PublicListingController extends Controller
      */
     private function generateUnitCard($unit)
     {
-        $photos = $unit->photos ?? [];
+        $images = $unit->property->images ?? collect();
         $features = $unit->features ?? [];
-        $imageUrl = !empty($photos) ? asset('storage/' . $photos[0]) : asset('images/no-image.png');
+        $imagePath = '';
+
+        $firstImage = $images->first();
+        if ($firstImage) {
+            $imagePath = $firstImage->file_path;
+            // Clean the path: remove leading slashes and fix double slashes
+            $imagePath = ltrim($imagePath, '/');
+            $imagePath = str_replace('//', '/', $imagePath);
+            // If it starts with 'storage/', remove it to avoid double storage/
+            if (strpos($imagePath, 'storage/') === 0) {
+                $imagePath = substr($imagePath, 8);
+            }
+        }
+
+        $imageUrl = $imagePath ? asset('storage/' . $imagePath) : asset('images/no-image.png');
 
         $html = '<div class="rental-card">';
         $html .= '<div class="rental-image">';

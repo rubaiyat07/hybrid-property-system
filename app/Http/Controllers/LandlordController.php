@@ -41,6 +41,18 @@ class LandlordController extends Controller
             'pending_payments' => Payment::whereHas('lease.unit.property', function($query) use ($user) {
                 $query->where('owner_id', $user->id);
             })->where('status', 'pending')->count(),
+            'total_taxes' => \App\Models\PropertyTax::whereHas('property', function($query) use ($user) {
+                $query->where('owner_id', $user->id);
+            })->sum('amount'),
+            'pending_taxes' => \App\Models\PropertyTax::whereHas('property', function($query) use ($user) {
+                $query->where('owner_id', $user->id);
+            })->where('status', 'pending')->count(),
+            'total_bills' => \App\Models\PropertyBill::whereHas('property', function($query) use ($user) {
+                $query->where('owner_id', $user->id);
+            })->sum('amount'),
+            'pending_bills' => \App\Models\PropertyBill::whereHas('property', function($query) use ($user) {
+                $query->where('owner_id', $user->id);
+            })->where('status', 'pending')->count(),
         ];
         
         // Recent payments
@@ -57,6 +69,23 @@ class LandlordController extends Controller
                 $query->where('owner_id', $user->id);
             })
             ->with('unit.property')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Recent documents
+        $recentDocuments = \App\Models\PropertyDocument::whereHas('property', function($query) use ($user) {
+                $query->where('owner_id', $user->id);
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Recent transfers
+        $recentTransfers = \App\Models\PropertyTransfer::whereHas('property', function($query) use ($user) {
+                $query->where('owner_id', $user->id);
+            })
+            ->with('fromUser', 'toUser')
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
@@ -104,6 +133,8 @@ class LandlordController extends Controller
             'stats',
             'recentPayments',
             'recentLeases',
+            'recentDocuments',
+            'recentTransfers',
             'properties',
             'ads',
             'activeListings',

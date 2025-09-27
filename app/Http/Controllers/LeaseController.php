@@ -54,12 +54,13 @@ class LeaseController extends Controller
         // Get filter options
         $tenants = Tenant::with('user')->get();
         $units = Unit::with('property')->get();
+        $properties = \App\Models\Property::where('owner_id', auth()->id())->get();
 
         if (auth()->user()->hasRole('Admin')) {
             return view('admin.leases.index', compact('leases', 'tenants', 'units'));
         }
 
-        return view('landlord.leases.index', compact('leases', 'tenants', 'units'));
+        return view('landlord.leases.index', compact('leases', 'tenants', 'units', 'properties'));
     }
 
     /**
@@ -70,19 +71,50 @@ class LeaseController extends Controller
     public function create(Request $request)
     {
         // Get available tenants and units
-        $tenants = Tenant::with('user')->get();
-        $units = Unit::where('status', 'available')->with('property')->get();
+        if (auth()->user()->hasRole('Landlord')) {
+            $tenants = Tenant::where(function($q) {
+                $q->whereHas('leases.unit.property', function($subQ) {
+                    $subQ->where('owner_id', auth()->id());
+                })->orWhereHas('user.unitInquiries', function($subQ) {
+                    $subQ->whereHas('unit.property', function($subSubQ) {
+                        $subSubQ->where('owner_id', auth()->id());
+                    })->where('status', 'approved');
+                });
+            })->with('user')->get();
+            $units = Unit::where('status', 'available')
+                ->whereHas('property', function($q) {
+                    $q->where('owner_id', auth()->id());
+                })
+                ->with('property')->get();
+        } else {
+            $tenants = Tenant::with('user')->get();
+            $units = Unit::where('status', 'available')->with('property')->get();
+        }
+
+        // If unit_id is provided (from approval redirect), filter to only that unit if available
+        if ($request->old('unit_id')) {
+            $unitId = $request->old('unit_id');
+            $unit = Unit::where('id', $unitId)->where('status', 'available')->with('property')->first();
+            if ($unit) {
+                $units = collect([$unit]);
+            }
+        }
 
         // If property_id is provided, filter units by property
         if ($request->filled('property_id')) {
             $units = $units->where('property_id', $request->property_id);
         }
 
-        if (auth()->user()->hasRole('Admin')) {
-            return view('admin.leases.create', compact('tenants', 'units'));
+        $inquiry = null;
+        if ($request->old('inquiry_id')) {
+            $inquiry = \App\Models\UnitInquiry::find($request->old('inquiry_id'));
         }
 
-        return view('landlord.leases.create', compact('tenants', 'units'));
+        if (auth()->user()->hasRole('Admin')) {
+            return view('admin.leases.create', compact('tenants', 'units', 'inquiry'));
+        }
+
+        return view('landlord.leases.create', compact('tenants', 'units', 'inquiry'));
     }
 
     /**
@@ -97,6 +129,47 @@ class LeaseController extends Controller
             DB::beginTransaction();
 
             $data = $request->validated();
+
+            // If inquiry_id is provided, create new tenant from inquiry
+            if ($request->filled('inquiry_id')) {
+                $inquiry = \App\Models\UnitInquiry::findOrFail($request->inquiry_id);
+
+                // Check if inquiry belongs to landlord's property
+                if ($inquiry->unit->property->owner_id !== auth()->id()) {
+                    throw new \Exception('Unauthorized inquiry.');
+                }
+
+                // Create user if not exists
+                $user = \App\Models\User::firstOrCreate(
+                    ['email' => $inquiry->inquirer_email],
+                    [
+                        'name' => $inquiry->inquirer_name,
+                        'phone' => $inquiry->inquirer_phone ?? '',
+                        'password' => bcrypt('password123'), // Temporary password
+                    ]
+                );
+
+                // Assign tenant role if not already
+                if (!$user->hasRole('Tenant')) {
+                    $user->assignRole('Tenant');
+                }
+
+                // Create tenant if not exists
+                $tenant = \App\Models\Tenant::firstOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'first_name' => $inquiry->inquirer_name,
+                        'last_name' => '',
+                        'phone' => $inquiry->inquirer_phone ?? '',
+                        'email' => $inquiry->inquirer_email,
+                    ]
+                );
+
+                $data['tenant_id'] = $tenant->id;
+
+                // Update inquiry status to leased
+                $inquiry->update(['status' => 'leased']);
+            }
 
             // Handle file upload
             if ($request->hasFile('document')) {

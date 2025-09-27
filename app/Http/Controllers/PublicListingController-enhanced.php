@@ -98,7 +98,7 @@ class PublicListingController extends Controller
             ->distinct()
             ->pluck('room_type');
 
-        return view('public_pages.rentals.index', compact(
+        return view('public_pages.rentals', compact(
             'units',
             'cities',
             'propertyTypes',

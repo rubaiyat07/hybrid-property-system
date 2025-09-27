@@ -65,6 +65,11 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class, 'user_id');
     }
 
+    public function unitInquiries()
+    {
+        return $this->hasMany(\App\Models\UnitInquiry::class, 'inquirer_email', 'email');
+    }
+
     
     protected $casts = [
         'email_verified_at' => 'datetime',

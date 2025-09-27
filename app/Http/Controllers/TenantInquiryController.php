@@ -17,32 +17,54 @@ class TenantInquiryController extends Controller
      */
     public function store(Request $request, Unit $unit)
     {
-        // Validate the request
+        // Validate the request (map form fields)
         $request->validate([
-            'inquirer_name' => 'required|string|max:255',
-            'inquirer_email' => 'required|email|max:255',
-            'inquirer_phone' => 'nullable|string|max:20',
-            'inquiry_type' => 'required|in:general_inquiry,booking_request,viewing_request',
-            'message' => 'required_if:inquiry_type,general_inquiry|string|max:1000',
-            'preferred_viewing_date' => 'required_if:inquiry_type,viewing_request|date|after:today',
-            'preferred_viewing_time' => 'required_if:inquiry_type,viewing_request|date_format:H:i',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:20',
+            'inquiry_type' => 'required|string|in:general,viewing,availability,negotiation,application',
+            'message' => 'required|string|max:1000',
+            'move_in_date' => 'nullable|date|after:today',
+            'lease_duration' => 'nullable|string',
+            'adults' => 'nullable|integer|min:1|max:10',
+            'children' => 'nullable|integer|min:0|max:10',
+            'pets' => 'nullable|in:yes,no',
+            'pet_info' => 'nullable|string|max:500',
+            'budget' => 'nullable|string',
+            'how_found' => 'nullable|string',
+            'terms_accepted' => 'required|accepted',
         ]);
 
-        // Ensure the unit is available for inquiries
-        if (!$unit->is_published || $unit->status !== 'vacant') {
+        // Map form fields to model fields
+        $inquirer_name = trim($request->first_name . ' ' . $request->last_name);
+        $inquiryType = match($request->inquiry_type) {
+            'general' => 'general_inquiry',
+            'viewing' => 'viewing_request',
+            'availability' => 'booking_request',
+            'negotiation' => 'general_inquiry',
+            'application' => 'booking_request',
+            default => 'general_inquiry'
+        };
+
+        // Ensure the unit is available for inquiries (vacant and from approved property)
+        if ($unit->status !== 'vacant' || $unit->property->registration_status !== \App\Models\Property::REGISTRATION_APPROVED) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'This unit is no longer available for inquiries.'], 400);
+            }
             return redirect()->back()->with('error', 'This unit is no longer available for inquiries.');
         }
 
         // Create the inquiry
         $inquiry = UnitInquiry::create([
             'unit_id' => $unit->id,
-            'inquirer_name' => $request->inquirer_name,
-            'inquirer_email' => $request->inquirer_email,
-            'inquirer_phone' => $request->inquirer_phone,
-            'inquiry_type' => $request->inquiry_type,
+            'inquirer_name' => $inquirer_name,
+            'inquirer_email' => $request->email,
+            'inquirer_phone' => $request->phone,
+            'inquiry_type' => $inquiryType,
             'message' => $request->message,
-            'preferred_viewing_date' => $request->preferred_viewing_date,
-            'preferred_viewing_time' => $request->preferred_viewing_time,
+            'preferred_viewing_date' => $request->move_in_date,
+            'preferred_viewing_time' => null, // Can be extended
             'status' => 'pending',
         ]);
 
@@ -62,12 +84,12 @@ class TenantInquiryController extends Controller
                 "Inquiry Details:\n" .
                 "- Type: " . ucfirst(str_replace('_', ' ', $request->inquiry_type)) . "\n" .
                 ($request->message ? "- Message: {$request->message}\n" : "") .
-                ($request->preferred_viewing_date ? "- Preferred Date: {$request->preferred_viewing_date}\n" : "") .
+                ($request->move_in_date ? "- Preferred Date: {$request->move_in_date}\n" : "") .
                 ($request->preferred_viewing_time ? "- Preferred Time: {$request->preferred_viewing_time}\n" : "") .
                 "\nBest regards,\n" .
                 config('app.name') . " Team",
                 function ($message) use ($request) {
-                    $message->to($request->inquirer_email)
+                    $message->to($request->email)
                             ->subject('Inquiry Confirmation - ' . config('app.name'));
                 }
             );
@@ -76,7 +98,18 @@ class TenantInquiryController extends Controller
             \Log::error('Failed to send inquiry confirmation email: ' . $e->getMessage());
         }
 
-        return redirect()->back()->with('success',
+        // Determine redirect URL based on authentication and role
+        $redirectUrl = (auth()->check() && auth()->user()->hasRole('Tenant')) ? route('tenant.rentals.index') : route('rentals.index');
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Your inquiry has been sent successfully! We will get back to you within 24 hours.',
+                'redirect_url' => $redirectUrl
+            ]);
+        }
+
+        return redirect($redirectUrl)->with('success',
             'Your inquiry has been sent successfully! We will get back to you within 24 hours.');
     }
 
@@ -85,12 +118,12 @@ class TenantInquiryController extends Controller
      */
     public function create(Unit $unit)
     {
-        // Ensure the unit is available for inquiries
-        if (!$unit->is_published || $unit->status !== 'vacant') {
+        // Ensure the unit is available for inquiries (vacant and from approved property)
+        if ($unit->status !== 'vacant' || $unit->property->registration_status !== \App\Models\Property::REGISTRATION_APPROVED) {
             abort(404, 'Unit not available for inquiries.');
         }
 
-        return view('public_pages.rentals.inquiry', compact('unit'));
+        return view('public_pages.inquiry', compact('unit'));
     }
 
     /**

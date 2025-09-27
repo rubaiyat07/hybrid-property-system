@@ -114,4 +114,9 @@ class Unit extends Model
     {
         return $this->property->address . ', ' . $this->property->city . ', ' . $this->property->state;
     }
+
+    public function displayTitle()
+    {
+        return 'Unit ' . $this->unit_number . ' at ' . $this->property->address;
+    }
 }

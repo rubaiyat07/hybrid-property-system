@@ -138,7 +138,14 @@ class PropertyController extends Controller
 
         $property->load(['units', 'leases.tenant', 'approver', 'images']);
 
-        return view('landlord.property.show', compact('property'));
+        // Get ownership history
+        $ownershipHistory = \App\Models\PropertyTransfer::where('property_id', $property->id)
+            ->where('status', 'completed')
+            ->with(['currentOwner', 'proposedBuyer'])
+            ->orderBy('completed_at', 'desc')
+            ->get();
+
+        return view('landlord.property.show', compact('property', 'ownershipHistory'));
     }
 
     /**
@@ -355,6 +362,61 @@ class PropertyController extends Controller
         $property->load(['units', 'owner']);
         
         return view('buyer.properties.show', compact('property'));
+    }
+
+    // Facilities Management
+    public function facilities(Property $property)
+    {
+        if ($property->owner_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $facilities = $property->facilities;
+
+        return view('landlord.properties.facilities', compact('property', 'facilities'));
+    }
+
+    public function storeFacility(Request $request, Property $property)
+    {
+        if ($property->owner_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        $property->facilities()->create($request->only(['name', 'description']));
+
+        return redirect()->back()->with('success', 'Facility added successfully.');
+    }
+
+    public function updateFacility(Request $request, Property $property, \App\Models\PropertyFacility $facility)
+    {
+        if ($property->owner_id !== auth()->id() || $facility->property_id !== $property->id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        $facility->update($request->only(['name', 'description']));
+
+        return redirect()->back()->with('success', 'Facility updated successfully.');
+    }
+
+    public function destroyFacility(Property $property, \App\Models\PropertyFacility $facility)
+    {
+        if ($property->owner_id !== auth()->id() || $facility->property_id !== $property->id) {
+            abort(403);
+        }
+
+        $facility->delete();
+
+        return redirect()->back()->with('success', 'Facility deleted successfully.');
     }
 
 
