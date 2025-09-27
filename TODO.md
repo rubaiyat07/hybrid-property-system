@@ -1,53 +1,23 @@
-# Vacancy → Advertisement → Tenant Search Flow Implementation
+# Task: After approval of tenant application, redirect landlord to create lease page
 
-## Bug Fixes
-- [x] Fix features validation error in UnitController (parse comma-separated string to array)
+## Steps to Complete:
 
-## UI/UX Improvements
-- [x] Standardize landlord dashboard index views (properties, tenants, units, leases, homepage, dashboard) with consistent design pattern
+1. [x] Search for relevant files using search_code for "tenant approval" to identify controllers handling approvals (e.g., TenantInquiryController, TenantController).
+2. [x] Read routes/web.php to understand routing for approvals and lease creation.
+3. [x] Read TenantController.php to analyze approval methods (approveInquiry, approveLead, approveInquiryFromIndex).
+4. [x] Search for LeaseController using search_files to locate it.
+5. [x] Read LeaseController.php to check create method and ensure it supports prefilling.
+6. [x] Read resources/views/landlord/leases/create.blade.php to verify form supports old() input for preselection.
+7. [x] Read app/Models/Unit.php to confirm unit status handling for availability.
+8. [x] Update TenantController: Add withInput() to redirects in approveInquiry and approveLead for prefilling tenant_id/unit_id.
+9. [x] Update approveInquiryFromIndex: After creating tenant, redirect to lease create with tenant_id and unit_id (from inquiry), using withInput().
+10. [x] In LeaseController::create, if unit_id provided, filter units to only that unit if available; set default start_date to today if not set.
+11. [] Test: No command needed yet; use browser_action if verification required later.
+12. [] Confirm completion with user.
 
-## Phase 1: Database & Models Setup
-- [x] Create migration to add listing fields to units table (is_published, deposit_amount, photos, description)
-- [x] Create migration for unit_inquiries table
-- [x] Update Unit model with listing-related methods and scopes
-- [ ] Update Lead model to handle tenant inquiries
-- [x] Create UnitInquiry model
+## Dependencies:
+- None; changes are isolated to controllers.
 
-## Phase 2: Backend Controllers
-- [x] Create PublicListingController for rental listings
-- [x] Create TenantInquiryController for handling inquiries
-- [x] Enhance UnitController with publish/unpublish functionality
-- [ ] Update PropertyController with listing-related methods
-
-## Phase 3: Frontend Views
-- [x] Create public rental listings page (/rentals) with search/filter
-- [x] Create unit detail page for public viewing
-- [x] Create tenant inquiry form
-- [x] Create booking request form
-- [x] Enhance unit management views with "Publish as Listing" option
-
-## Phase 4: Routes & Configuration
-- [x] Add public routes for rental listings
-- [x] Add tenant inquiry routes
-- [x] Add enhanced unit management routes
-- [x] Configure middleware for public access
-
-## Phase 5: Features Implementation
-- [ ] Implement search & filter functionality
-- [ ] Implement lead generation system
-- [ ] Implement booking request system
-- [ ] Add SEO optimization for listings
-- [ ] Add social media sharing functionality
-
-## Phase 6: Testing & Polish
-- [ ] Test complete vacancy → advertisement → tenant search flow
-- [ ] Test landlord unit publishing workflow
-- [ ] Test tenant inquiry and booking system
-- [ ] Polish UI/UX and responsive design
-
-## New Tasks: Tenant Homepage and Rentals Page
-- [x] Update tenant homepage layout to match landlord homepage structure (stats cards, ads carousel, listings table, sidebar with quick actions)
-- [x] Create find rentals page for tenants showing active listed vacant units
-- [x] Add scope to Unit model for published vacant units (already exists as availableForListing)
-- [x] Create/update TenantController with homepage and rentalsIndex methods
-- [x] Add route for tenant rentals page
+## Follow-up:
+- After edits, verify by simulating approval flow (manual or via browser_action).
+- If screening approval exists (TenantScreening model), extend flow, but current task focuses on inquiry/lead approval.
