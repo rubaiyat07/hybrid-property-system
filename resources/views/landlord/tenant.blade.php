@@ -1,116 +1,112 @@
+{{-- File: resources/views/landlord/tenant.blade.php --}}
 @extends('layouts.landlord')
 
 @section('title', 'My Tenants - HybridEstate')
 
 @section('content')
-<div class="tenants-page">
-    <!-- Page Header -->
-    <div class="page-header mb-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">My Tenants</h1>
-                <p class="text-gray-600 mt-1">Manage and view all your tenants</p>
-            </div>
-            <div class="flex gap-3">
-                <button class="btn-secondary">
-                    <i class="fas fa-download mr-2"></i>Export List
-                </button>
-                <button class="btn-primary" onclick="openAddTenantModal()">
-                    <i class="fas fa-plus mr-2"></i>Add Tenant
-                </button>
-            </div>
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">My Tenants</h1>
+            <p class="text-gray-600 mt-1">Manage and view all your tenants</p>
         </div>
+        <a href="{{ route('landlord.tenants.create') }}"
+           class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium">
+            <i class="fas fa-plus mr-1"></i> Add Tenant
+        </a>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="stats-grid grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="stat-card bg-white p-6 rounded-lg shadow-sm border">
-            <div class="flex items-center justify-between">
-                <div>
+    <!-- Tenants Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                    <i class="fas fa-users text-blue-600"></i>
+                </div>
+                <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Total Tenants</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $stats['total_tenants'] ?? 0 }}</p>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-full">
-                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                    <p class="text-2xl font-bold text-gray-900">{{ $stats['total_tenants'] ?? 0 }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="stat-card bg-white p-6 rounded-lg shadow-sm border">
-            <div class="flex items-center justify-between">
-                <div>
+        <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-100 rounded-lg">
+                    <i class="fas fa-file-contract text-green-600"></i>
+                </div>
+                <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Active Leases</p>
-                    <p class="text-3xl font-bold text-green-600">{{ $stats['active_leases'] ?? 0 }}</p>
-                </div>
-                <div class="bg-green-100 p-3 rounded-full">
-                    <i class="fas fa-file-contract text-green-600 text-xl"></i>
+                    <p class="text-2xl font-bold text-gray-900">{{ $stats['active_leases'] ?? 0 }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="stat-card bg-white p-6 rounded-lg shadow-sm border">
-            <div class="flex items-center justify-between">
-                <div>
+        <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-yellow-100 rounded-lg">
+                    <i class="fas fa-clock text-yellow-600"></i>
+                </div>
+                <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Pending Screening</p>
-                    <p class="text-3xl font-bold text-yellow-600">{{ $stats['pending_screening'] ?? 0 }}</p>
-                </div>
-                <div class="bg-yellow-100 p-3 rounded-full">
-                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                    <p class="text-2xl font-bold text-gray-900">{{ $stats['pending_screening'] ?? 0 }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="stat-card bg-white p-6 rounded-lg shadow-sm border">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Overdue Payments</p>
-                    <p class="text-3xl font-bold text-red-600">{{ $stats['overdue_payments'] ?? 0 }}</p>
+        <div class="bg-white shadow rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-red-100 rounded-lg">
+                    <i class="fas fa-exclamation-triangle text-red-600"></i>
                 </div>
-                <div class="bg-red-100 p-3 rounded-full">
-                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Overdue Payments</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $stats['overdue_payments'] ?? 0 }}</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Filters and Search -->
-    <div class="filters-section bg-white p-4 rounded-lg shadow-sm border mb-6">
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
         <div class="flex flex-wrap gap-4 items-center">
-            <div class="search-box">
-                <input type="text" id="tenant-search" placeholder="Search tenants..." 
-                       class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                <i class="fas fa-search search-icon"></i>
+            <div class="relative">
+                <input type="text" id="tenant-search" placeholder="Search tenants..."
+                       class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
             </div>
-            
-            <select id="property-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+
+            <select id="property-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 <option value="">All Properties</option>
                 @foreach($properties as $property)
                     <option value="{{ $property->id }}">{{ $property->address }}</option>
                 @endforeach
             </select>
 
-            <select id="status-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            <select id="status-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                 <option value="">All Status</option>
                 <option value="active">Active</option>
                 <option value="pending">Pending</option>
                 <option value="expired">Expired</option>
             </select>
 
-            <button class="btn-secondary" onclick="clearFilters()">
-                <i class="fas fa-times mr-2"></i>Clear
+            <button class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium" onclick="clearFilters()">
+                <i class="fas fa-times mr-1"></i> Clear
             </button>
         </div>
     </div>
 
     <!-- Tenants Table -->
-    <div class="tenants-table bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div class="table-header p-4 border-b bg-gray-50">
-            <h3 class="text-lg font-semibold text-gray-900">Tenant List</h3>
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">Tenant List</h2>
         </div>
-        
-        <div class="table-responsive">
-            <table class="w-full">
-                <thead class="bg-gray-50 border-b">
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
@@ -124,12 +120,12 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($tenants as $tenant)
-                    <tr class="hover:bg-gray-50 transition-colors">
+                    <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     @if($tenant->user->profile_photo_url)
-                                        <img class="h-10 w-10 rounded-full object-cover" 
+                                        <img class="h-10 w-10 rounded-full object-cover"
                                              src="{{ $tenant->user->profile_photo_url }}" alt="">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
@@ -157,38 +153,38 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($tenant->leases->where('end_date', '>=', now())->count() > 0)
-                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                                     Active
                                 </span>
                             @elseif($tenant->leases->count() > 0)
-                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                                     Expired
                                 </span>
                             @else
-                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
                                     No Lease
                                 </span>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${{ number_format($tenant->leases->first()->monthly_rent ?? 0, 2) }}
+                            ${{ number_format($tenant->leases->first()->rent_amount ?? 0, 2) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php
                                 $latestPayment = $tenant->payments->sortByDesc('due_date')->first();
                                 $isOverdue = $latestPayment && $latestPayment->status === 'pending' && $latestPayment->due_date < now();
                             @endphp
-                            
+
                             @if($isOverdue)
-                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                                     Overdue
                                 </span>
                             @elseif($latestPayment && $latestPayment->status === 'paid')
-                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                                     Paid
                                 </span>
                             @else
-                                <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                     Pending
                                 </span>
                             @endif
@@ -198,19 +194,19 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-2">
-                                <button class="text-indigo-600 hover:text-indigo-900" 
-                                        onclick="viewTenant({{ $tenant->id }})" title="View Details">
+                                <a href="{{ route('landlord.tenants.show', $tenant) }}"
+                                   class="text-indigo-600 hover:text-indigo-900" title="View Details">
                                     <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="text-green-600 hover:text-green-900" 
-                                        onclick="editTenant({{ $tenant->id }})" title="Edit">
+                                </a>
+                                <a href="{{ route('landlord.tenants.edit', $tenant) }}"
+                                   class="text-yellow-600 hover:text-yellow-900" title="Edit">
                                     <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="text-blue-600 hover:text-blue-900" 
+                                </a>
+                                <button class="text-blue-600 hover:text-blue-900"
                                         onclick="sendMessage({{ $tenant->id }})" title="Send Message">
                                     <i class="fas fa-envelope"></i>
                                 </button>
-                                <button class="text-red-600 hover:text-red-900" 
+                                <button class="text-red-600 hover:text-red-900"
                                         onclick="removeTenant({{ $tenant->id }})" title="Remove">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -234,87 +230,22 @@
 
         <!-- Pagination -->
         @if(isset($tenants) && method_exists($tenants, 'links'))
-            <div class="px-6 py-3 border-t bg-gray-50">
+            <div class="px-6 py-4 border-t border-gray-200">
                 {{ $tenants->links() }}
             </div>
         @endif
     </div>
 </div>
 
-<!-- Add Tenant Modal -->
-<div id="addTenantModal" class="modal hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="text-lg font-semibold">Add New Tenant</h3>
-            <button onclick="closeAddTenantModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <form id="addTenantForm" action="{{ route('tenant.store') }}" method="POST">
-            @csrf
-            <div class="modal-body space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Property</label>
-                    <select name="property_id" required 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Select Property</option>
-                        @foreach($properties as $property)
-                            <option value="{{ $property->id }}">{{ $property->address }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
-                    <select name="unit_id" required 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Select Unit</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Move In Date</label>
-                    <input type="date" name="move_in_date" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" onclick="closeAddTenantModal()" class="btn-secondary mr-3">Cancel</button>
-                <button type="submit" class="btn-primary">Add Tenant</button>
-            </div>
-        </form>
-    </div>
-</div>
-
+@push('scripts')
 <script>
-// Modal functions
-function openAddTenantModal() {
-    document.getElementById('addTenantModal').classList.remove('hidden');
-}
-
-function closeAddTenantModal() {
-    document.getElementById('addTenantModal').classList.add('hidden');
-}
-
 // Tenant actions
-function viewTenant(tenantId) {
-    window.location.href = `/landlord/tenants/${tenantId}`;
-}
-
-function editTenant(tenantId) {
-    window.location.href = `/landlord/tenants/${tenantId}/edit`;
-}
-
 function sendMessage(tenantId) {
     window.location.href = `/landlord/tenants/${tenantId}/message`;
 }
 
 function removeTenant(tenantId) {
     if (confirm('Are you sure you want to remove this tenant?')) {
-        // Handle tenant removal
         fetch(`/landlord/tenants/${tenantId}`, {
             method: 'DELETE',
             headers: {
@@ -340,5 +271,6 @@ document.getElementById('tenant-search').addEventListener('input', function() {
     // Implement search logic
 });
 </script>
+@endpush
 
 @endsection

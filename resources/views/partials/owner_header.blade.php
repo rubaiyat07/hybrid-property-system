@@ -32,11 +32,54 @@
         {{-- Landlord --}}
         @role('Landlord')
             <a href="{{ route('landlord.homepage') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Home</a>
-            <a href="{{ route('landlord.property.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">My Properties</a>
-            <a href="{{ route('landlord.tenants.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Tenants</a>
-            <a href="{{ route('landlord.leases.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Leases</a>
-            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Payments</a>
-            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Billings</a>
+            
+            <!-- Properties & Units Dropdown -->
+            <div class="dropdown">
+                <button class="dropdown-trigger relative font-medium text-black hover:text-indigo-400 transition">
+                    Properties & Units <i class="fas fa-chevron-down ml-1"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="{{ route('landlord.property.index') }}">
+                        <i class="fas fa-building mr-2"></i> My Properties
+                    </a>
+                    <a href="{{ route('landlord.units.index') }}">
+                        <i class="fas fa-home mr-2"></i> My Units
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Finance Dropdown -->
+            <div class="dropdown">
+                <button class="dropdown-trigger relative font-medium text-black hover:text-indigo-400 transition">
+                    Finance <i class="fas fa-chevron-down ml-1"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="{{ route('landlord.payments.index') }}">
+                        <i class="fas fa-dollar-sign mr-2"></i> Payments
+                    </a>
+                    <a href="#">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i> Billings
+                    </a>
+                    <a href="#">
+                        <i class="fas fa-receipt mr-2"></i> Invoices
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Tenants & Leases Dropdown -->
+            <div class="dropdown">
+                <button class="dropdown-trigger relative font-medium text-black hover:text-indigo-400 transition">
+                    Tenants & Leases <i class="fas fa-chevron-down ml-1"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="{{ route('landlord.tenants.index') }}">
+                        <i class="fas fa-users mr-2"></i> Tenants
+                    </a>
+                    <a href="{{ route('landlord.leases.index') }}">
+                        <i class="fas fa-file-contract mr-2"></i> Leases
+                    </a>
+                </div>
+            </div>
         @endrole
 
         {{-- Agent --}}
@@ -51,7 +94,7 @@
         {{-- Tenant --}}
         @role('Tenant')
             <a href="{{ route('tenant.homepage') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Home</a>
-            <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Find Rentals</a>
+            <a href="{{ route('tenant.rentals.index') }}" class="relative font-medium text-black hover:text-indigo-400 transition">Find Rentals</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">My Lease</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Payments</a>
             <a href="#" class="relative font-medium text-black hover:text-indigo-400 transition">Support</a>

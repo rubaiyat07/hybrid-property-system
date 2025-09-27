@@ -66,6 +66,15 @@ class UnitController extends Controller
      */
     public function store(Request $request)
     {
+        // Process features: convert comma-separated string to array
+        $features = $request->input('features');
+        if (is_string($features) && !empty($features)) {
+            $features = array_filter(array_map('trim', explode(',', $features)));
+        } else {
+            $features = [];
+        }
+        $request->merge(['features' => $features]);
+
         $request->validate([
             'property_id' => 'required|exists:properties,id',
             'unit_number' => 'required|string|max:255',
@@ -149,6 +158,15 @@ class UnitController extends Controller
         if ($unit->property->owner_id !== auth()->id() || !$unit->property->is_approved) {
             abort(403, 'Unauthorized action.');
         }
+
+        // Process features: convert comma-separated string to array
+        $features = $request->input('features');
+        if (is_string($features) && !empty($features)) {
+            $features = array_filter(array_map('trim', explode(',', $features)));
+        } else {
+            $features = [];
+        }
+        $request->merge(['features' => $features]);
 
         $request->validate([
             'unit_number' => 'required|string|max:255',

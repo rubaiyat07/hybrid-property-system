@@ -61,7 +61,6 @@ body {
     right: 0;
     top: 100%;
     background: #fff;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     border-radius: 8px;
     padding: 0.5rem;
     min-width: 150px;
@@ -615,6 +614,12 @@ body {
     border: 1px solid #fecaca;
 }
 
+.alert-info {
+    background: rgba(135, 206, 235, 0.1);
+    color: #4682B4;
+    border: 1px solid #87CEEB;
+}
+
 .no-users {
     text-align: center;
     padding: 40px 20px;
@@ -820,28 +825,36 @@ body {
 
 .stat-card {
     background: #fff;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 1rem;
     text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
 }
 
 .stat-card h3 {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #6b7280;
-    margin: 0 0 0.5rem 0;
+    color: #4a5568;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stat-card .stat-value {
+    color: #1a1a2e;
     font-size: 2rem;
     font-weight: 700;
+    background: linear-gradient(135deg, #333 0%, #4a5568 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0;
 }
 

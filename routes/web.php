@@ -168,6 +168,7 @@ Route::middleware(['auth'])->group(function () {
         
         // Units (under landlord's approved properties only)
         Route::resource('units', UnitController::class)->except(['destroy']); 
+        Route::delete('units/{unit}', [UnitController::class, 'destroy'])->name('units.destroy');
         Route::get('units/create/{property_id?}', [UnitController::class, 'create'])
              ->name('units.create.property');
         Route::get('property/{property}/units', [UnitController::class, 'getPropertyUnits'])
@@ -224,8 +225,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Tenant Routes (Individual Tenant Dashboard)
     Route::prefix('tenant')->name('tenant.')->middleware(['role:Tenant'])->group(function () {
-        Route::get('/homepage', [TenantController::class, 'tenantHomepage'])->name('homepage');
+        Route::get('/homepage', [TenantController::class, 'homepage'])->name('homepage');
         Route::get('/dashboard', [DashboardController::class, 'tenantDashboard'])->name('dashboard');
+        Route::get('/rentals', [TenantController::class, 'rentalsIndex'])->name('rentals.index');
         
         // Tenant's Property Browsing
         Route::get('/properties/browse', [PropertyController::class, 'tenantBrowse'])->name('properties.browse');
