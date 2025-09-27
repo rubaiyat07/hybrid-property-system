@@ -122,6 +122,24 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/income', [AdminController::class, 'incomeReport'])->name('reports.income');
         Route::get('/reports/occupancy', [AdminController::class, 'occupancyReport'])->name('reports.occupancy');
         
+        // Tax Management
+        Route::get('/taxes', [AdminController::class, 'taxes'])->name('taxes.index');
+        Route::post('/taxes/{tax}/verify', [AdminController::class, 'verifyTax'])->name('taxes.verify');
+        
+        // Utility Bills Management
+        Route::get('/bills', [AdminController::class, 'bills'])->name('bills.index');
+        Route::post('/bills/{bill}/verify', [AdminController::class, 'verifyBill'])->name('bills.verify');
+        
+        // Property Documents Management
+        Route::get('/documents', [AdminController::class, 'documents'])->name('documents.index');
+        Route::post('/documents/{document}/approve', [AdminController::class, 'approveDocument'])->name('documents.approve');
+        Route::post('/documents/{document}/reject', [AdminController::class, 'rejectDocument'])->name('documents.reject');
+        
+        // Property Transfers Management
+        Route::get('/transfers', [AdminController::class, 'transfers'])->name('transfers.index');
+        Route::post('/transfers/{transfer}/approve', [AdminController::class, 'approveTransfer'])->name('transfers.approve');
+        Route::post('/transfers/{transfer}/reject', [AdminController::class, 'rejectTransfer'])->name('transfers.reject');
+        
         // Tenant Screening Management
         Route::get('/screenings', [AdminController::class, 'screenings'])->name('screenings.index');
         Route::get('/screenings/{screening}', [AdminController::class, 'showScreening'])->name('screenings.show');
@@ -179,13 +197,24 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenants.create');
         Route::post('/tenants', [TenantController::class, 'store'])->name('tenants.store');
         Route::get('/tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
-        Route::get('/tenants/{tenant}/edit', [TenantController::class, 'edit'])->name('tenants.edit');
-        Route::put('/tenants/{tenant}', [TenantController::class, 'update'])->name('tenants.update');
+        // Edit and update removed - landlords cannot edit tenants
         Route::delete('/tenants/{tenant}', [TenantController::class, 'destroy'])->name('tenants.destroy');
         
         // AJAX Routes for Tenant Management
         Route::get('/properties/{property}/units', [TenantController::class, 'getUnits'])->name('tenants.get-units');
         Route::get('/tenants/search', [TenantController::class, 'search'])->name('tenants.search');
+
+        // Inquiry Approval/Decline for Tenants
+        Route::post('/tenants/{tenant}/inquiries/{inquiry}/approve', [TenantController::class, 'approveInquiry'])->name('tenants.approve-inquiry');
+        Route::post('/tenants/{tenant}/inquiries/{inquiry}/decline', [TenantController::class, 'declineInquiry'])->name('tenants.decline-inquiry');
+        Route::post('/tenants/{tenant}/leads/{lead}/approve', [TenantController::class, 'approveLead'])->name('tenants.approve-lead');
+        Route::post('/tenants/{tenant}/leads/{lead}/decline', [TenantController::class, 'declineLead'])->name('tenants.decline-lead');
+
+        // Inquiry management from index page (applications)
+        Route::post('/inquiries/{inquiry}/approve', [TenantController::class, 'approveInquiryFromIndex'])->name('inquiries.approve');
+        Route::post('/inquiries/{inquiry}/decline', [TenantController::class, 'declineInquiryFromIndex'])->name('inquiries.decline');
+        Route::get('/inquiries/{inquiry}/reply', [TenantController::class, 'replyInquiryFromIndex'])->name('inquiries.reply');
+        Route::post('/inquiries/{inquiry}/send-reply', [TenantController::class, 'sendReplyFromIndex'])->name('inquiries.send-reply');
         
         // Tenant Communication
         Route::get('/tenants/{tenant}/message', [TenantController::class, 'messageForm'])->name('tenants.message');
@@ -202,6 +231,36 @@ Route::middleware(['auth'])->group(function () {
         
         // Payments (landlord can view payments received)
         Route::resource('payments', PaymentController::class)->only(['index', 'show']);
+
+        // Tax Management
+        Route::resource('taxes', \App\Http\Controllers\LandlordTaxController::class)->only(['index']);
+        Route::post('taxes/{tax}/upload-receipt', [\App\Http\Controllers\LandlordTaxController::class, 'uploadReceipt'])->name('taxes.upload-receipt');
+
+        // Bill Management
+        Route::resource('bills', \App\Http\Controllers\LandlordBillController::class)->only(['index']);
+        Route::post('bills/{bill}/pay', [\App\Http\Controllers\LandlordBillController::class, 'pay'])->name('bills.pay');
+
+        // Property Documents
+        Route::prefix('property/{property}')->name('property.')->group(function () {
+            Route::get('documents', [\App\Http\Controllers\LandlordDocumentController::class, 'index'])->name('documents.index');
+            Route::post('documents', [\App\Http\Controllers\LandlordDocumentController::class, 'store'])->name('documents.store');
+            Route::get('documents/{document}/download', [\App\Http\Controllers\LandlordDocumentController::class, 'download'])->name('documents.download');
+        });
+
+        // Property Transfers
+        Route::prefix('property/{property}')->name('property.')->group(function () {
+            Route::get('transfers', [\App\Http\Controllers\LandlordTransferController::class, 'index'])->name('transfers.index');
+            Route::get('transfers/create', [\App\Http\Controllers\LandlordTransferController::class, 'create'])->name('transfers.create');
+            Route::post('transfers', [\App\Http\Controllers\LandlordTransferController::class, 'store'])->name('transfers.store');
+        });
+
+        // Property Facilities
+        Route::prefix('property/{property}')->name('property.')->group(function () {
+            Route::get('facilities', [PropertyController::class, 'facilities'])->name('facilities.index');
+            Route::post('facilities', [PropertyController::class, 'storeFacility'])->name('facilities.store');
+            Route::put('facilities/{facility}', [PropertyController::class, 'updateFacility'])->name('facilities.update');
+            Route::delete('facilities/{facility}', [PropertyController::class, 'destroyFacility'])->name('facilities.destroy');
+        });
     });
 
     // Agent Routes (only approved properties)
@@ -235,6 +294,10 @@ Route::middleware(['auth'])->group(function () {
         
         // Tenant's Current Lease
         Route::get('/lease/current', [LeaseController::class, 'currentLease'])->name('lease.current');
+        Route::get('/lease/agreement', [TenantController::class, 'leaseAgreement'])->name('lease.agreement');
+        Route::get('/lease/{lease}/download-agreement', [TenantController::class, 'downloadAgreement'])->name('lease.download-agreement');
+        Route::post('/lease/{lease}/renew-request', [TenantController::class, 'renewLease'])->name('lease.renew-request');
+        Route::post('/lease/{lease}/terminate-request', [TenantController::class, 'terminateLease'])->name('lease.terminate-request');
         Route::get('/leases', [LeaseController::class, 'tenantLeases'])->name('leases.index');
         Route::get('/leases/{lease}', [LeaseController::class, 'tenantShow'])->name('leases.show');
         
@@ -268,6 +331,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profile/edit', [TenantController::class, 'editProfile'])->name('profile.edit');
         Route::put('/profile', [TenantController::class, 'updateProfile'])->name('profile.update');
         Route::get('/notifications', [TenantController::class, 'notifications'])->name('notifications.index');
+
+        // Bills
+        Route::get('/bills', [TenantController::class, 'bills'])->name('bills.index');
+        Route::post('/bills/{bill}/pay', [TenantController::class, 'payBill'])->name('bills.pay');
+        Route::get('/bills/{bill}/download', [TenantController::class, 'downloadBill'])->name('bills.download');
+
+        // Taxes
+        Route::get('/taxes', [TenantController::class, 'taxes'])->name('taxes.index');
+        Route::post('/taxes/{tax}/upload-receipt', [TenantController::class, 'uploadTaxReceipt'])->name('taxes.upload-receipt');
+        Route::get('/taxes/{tax}/download', [TenantController::class, 'downloadTax'])->name('taxes.download');
     });
 
     // Buyer Routes (only approved, active properties)
@@ -336,5 +409,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/inquiries/{inquiry}/close', [TenantInquiryController::class, 'close'])->name('inquiries.close');
     });
 });
+
+// Menu Management Routes (assuming for restaurant or something)
+// Route::middleware(['auth'])->group(function () {
+//     Route::resource('menus', MenuController::class);
+//     Route::post('menus/{menu}/items', [MenuController::class, 'addItem'])->name('menus.add-item');
+//     Route::resource('menu-items', MenuItemController::class);
+// });
 
 require __DIR__.'/auth.php';

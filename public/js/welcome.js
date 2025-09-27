@@ -198,4 +198,6 @@ function applyRentFilters() {
     }
 });
 
-renderRent(rentItems);
+document.addEventListener('DOMContentLoaded', () => {
+    renderRent(rentItems);
+});
